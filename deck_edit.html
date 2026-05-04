@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>デッキ編集</title>
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<body>
+  <h1>デッキ編集</h1>
+
+  <div>
+    <h3>クラス（変更不可）</h3>
+    <p id="deckClass" style="font-weight: bold;"></p>
+
+    <h3>デッキ名</h3>
+    <input type="text" id="deckName" placeholder="例: ミッドレンジネメシス" />
+
+    <h3>デッキ画像URL</h3>
+    <div style="margin-top: 20px;">
+      <button onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">デッキ作成はこちら</button>
+    </div>
+    <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" oninput="updateImage()" />
+    <div id="imagePreview"></div>
+
+    <h3>メモ</h3>
+    <textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea>
+
+    <br>
+    <button onclick="saveDeck()">保存する</button>
+    <button onclick="cancelEdit()">キャンセル</button>
+  </div>
+
+  <script>
+    const allData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const editDeckId = localStorage.getItem('editDeckId');
+    const deck = allData.decks?.find(d => d.id === editDeckId);
+
+    if (!deck) {
+      alert('編集対象のデッキが見つかりません。');
+      location.href = 'deck_select.html';
+    }
+
+    // 初期表示
+    document.getElementById('deckClass').textContent = deck.class;
+    document.getElementById('deckName').value = deck.name || '';
+    document.getElementById('deckUrl').value = deck.url || '';
+    document.getElementById('deckMemo').value = deck.memo || '';
+    updateImage();
+
+    function updateImage() {
+      const url = document.getElementById('deckUrl').value.trim();
+      const container = document.getElementById('imagePreview');
+      container.innerHTML = '';
+      if (url) {
+        const img = document.createElement('img');
+        img.src = url;
+        container.appendChild(img);
+      }
+    }
+
+    function saveDeck() {
+      const name = document.getElementById('deckName').value.trim();
+      const url = document.getElementById('deckUrl').value.trim();
+      const memo = document.getElementById('deckMemo').value.trim();
+
+      if (!name) {
+        alert('デッキ名を入力してください');
+        return;
+      }
+
+      // 上書き
+      deck.name = name;
+      deck.url = url;
+      deck.memo = memo;
+
+      // 保存
+      localStorage.setItem('shadowverseData', JSON.stringify(allData));
+      alert('デッキを更新しました');
+      location.href = 'deck_select.html';
+    }
+
+    function cancelEdit() {
+      location.href = 'deck_select.html';
+    }
+  </script>
+</body>
+
+</html>

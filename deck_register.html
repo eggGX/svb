@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>デッキ登録</title>
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<body>
+  <h1>デッキ登録</h1>
+
+  <div class="class-buttons">
+    <h3>クラス選択</h3>
+    <div id="classButtons"></div>
+  </div>
+
+  <div>
+    <h3>デッキ名</h3>
+    <input type="text" id="deckName" placeholder="例: ミッドレンジロイヤル" />
+
+    <h3>デッキ画像URL</h3>
+    <div style="margin-top: 20px;">
+      <button onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">デッキ作成はこちら</button>
+    </div>
+    <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" oninput="updateImage()" />
+    <div id="imagePreview"></div>
+
+    <h3>メモ</h3>
+    <textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea>
+  </div>
+
+  <button onclick="registerDeck()">デッキを登録</button>
+  <button onclick="goToSelect()">デッキ選択へ</button>
+
+  <script>
+    const classIcons = {
+      'エルフ': 'images/elf.svg',
+      'ロイヤル': 'images/royal.svg',
+      'ウィッチ': 'images/witch.svg',
+      'ドラゴン': 'images/dragon.svg',
+      'ナイトメア': 'images/nightmare.svg',
+      'ビショップ': 'images/bishop.svg',
+      'ネメシス': 'images/nemesis.svg'
+    };
+
+    let selectedClass = null;
+    const classButtonsContainer = document.getElementById('classButtons');
+
+    Object.entries(classIcons).forEach(([cls, imgPath]) => {
+      const btn = document.createElement('button');
+      btn.innerHTML = `<img src="${imgPath}" alt="${cls}" title="${cls}" class="class-icon" />`;
+      btn.onclick = () => {
+        selectedClass = cls;
+        [...classButtonsContainer.children].forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+      };
+      classButtonsContainer.appendChild(btn);
+    });
+
+    function updateImage() {
+      const url = document.getElementById('deckUrl').value;
+      const container = document.getElementById('imagePreview');
+      container.innerHTML = '';
+      if (url) {
+        const img = document.createElement('img');
+        img.src = url;
+        container.appendChild(img);
+      }
+    }
+
+    function registerDeck() {
+      const name = document.getElementById('deckName').value.trim();
+      const url = document.getElementById('deckUrl').value.trim();
+      const memo = document.getElementById('deckMemo').value.trim();
+
+      if (!selectedClass || !name) {
+        alert('クラスとデッキ名は必須です');
+        return;
+      }
+
+      const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+      if (!data.decks) data.decks = [];
+
+      const id = 'deck-' + Date.now();
+      data.decks.push({ id, class: selectedClass, name, url, memo, records: [] });
+
+      data.selectedDeckId = id;
+      localStorage.setItem('shadowverseData', JSON.stringify(data));
+
+      location.href = 'deck_select.html';
+    }
+
+    function goToSelect() {
+      location.href = 'deck_select.html';
+    }
+  </script>
+</body>
+
+</html>

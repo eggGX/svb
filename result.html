@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>戦績結果</title>
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+
+<body>
+  <h1>戦績結果</h1>
+
+  <button onclick="goToBattle()">戦績入力へ</button>
+
+  <h2>全体統計</h2>
+  <div id="totalStats"></div>
+
+  <h2>今日・直近の統計</h2>
+  <div id="recentStats"></div>
+
+  <h2>クラス別戦績</h2>
+  <div id="summary"></div>
+
+  <!-- 右上にデッキ画像表示 -->
+  <div id="deckImageContainer"></div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const selectedDeckId = data.selectedDeckId;
+    let selectedDeck = null;
+
+    if (data.decks && selectedDeckId) {
+      selectedDeck = data.decks.find(d => d.id === selectedDeckId);
+    }
+
+    function goToBattle() {
+      location.href = 'battle.html';
+    }
+
+
+
+    function formatRate(winCount, total) {
+      return total ? ((winCount / total) * 100).toFixed(1) + '%' : '-';
+    }
+
+    function isTodayRecord(record) {
+      if (!record.createdAt) return false;
+      const recordDate = new Date(record.createdAt);
+      if (Number.isNaN(recordDate.getTime())) return false;
+      const today = new Date();
+      return recordDate.getFullYear() === today.getFullYear()
+        && recordDate.getMonth() === today.getMonth()
+        && recordDate.getDate() === today.getDate();
+    }
+
+    function createStatsHtml(title, records) {
+      const total = records.length;
+      const win = records.filter(r => r.win).length;
+      return `
+        <div class="stat-card">
+          <h3>${title}</h3>
+          <p>対戦数: ${total}</p>
+          <p>勝利数: ${win}</p>
+          <p>勝率: ${formatRate(win, total)}</p>
+        </div>
+      `;
+    }
+
+    function displayRecentStats() {
+      if (!selectedDeck || !selectedDeck.records) {
+        document.getElementById('recentStats').innerHTML = '<p>戦績データがありません。</p>';
+        return;
+      }
+      const records = selectedDeck.records || [];
+      const todayRecords = records.filter(isTodayRecord);
+      const recent10Records = records.slice(-10).reverse();
+      document.getElementById('recentStats').innerHTML = `
+        <div class="stat-card-area">
+          ${createStatsHtml('今日', todayRecords)}
+          ${createStatsHtml('直近10戦', recent10Records)}
+        </div>
+      `;
+    }
+
+    function displayTotalStats() {
+      if (!selectedDeck || !selectedDeck.records) {
+        document.getElementById('totalStats').innerHTML = '<p>戦績データがありません。</p>';
+        return;
+      }
+      const records = selectedDeck.records;
+      const total = records.length;
+      const winCount = records.filter(r => r.win).length;
+      const firstCount = records.filter(r => r.first).length;
+
+      const winRate = total ? (winCount / total * 100).toFixed(1) + '%' : '-';
+      const firstRate = total ? (firstCount / total * 100).toFixed(1) + '%' : '-';
+
+      const html = `
+        <p>対戦数: ${total}</p>
+        <p>勝利数: ${winCount}</p>
+        <p>勝率: ${winRate}</p>
+        <p>先攻割合: ${firstRate}</p>
+      `;
+      document.getElementById('totalStats').innerHTML = html;
+    }
+
+    function displayClassStats() {
+      if (!selectedDeck || !selectedDeck.records) {
+        document.getElementById('summary').innerHTML = '<p>戦績データがありません。</p>';
+        return;
+      }
+
+      const classes = ['エルフ', 'ロイヤル', 'ウィッチ', 'ドラゴン', 'ナイトメア', 'ビショップ', 'ネメシス'];
+      const summary = {};
+
+      for (const cls of classes) {
+        summary[cls] = {
+          total: 0,
+          win: 0,
+          firstWin: 0,
+          secondWin: 0,
+          firstTotal: 0,
+          secondTotal: 0
+        };
+      }
+
+      for (const r of selectedDeck.records) {
+        if (summary[r.opponent]) {
+          summary[r.opponent].total++;
+          if (r.win) summary[r.opponent].win++;
+          if (r.first === true) {
+            summary[r.opponent].firstTotal++;
+            if (r.win) summary[r.opponent].firstWin++;
+          } else if (r.first === false) {
+            summary[r.opponent].secondTotal++;
+            if (r.win) summary[r.opponent].secondWin++;
+          }
+        }
+      }
+
+      const table = document.createElement('table');
+      const header = document.createElement('tr');
+      header.innerHTML = `
+    <th>相手クラス</th>
+    <th>対戦数</th>
+    <th>勝利数</th>
+    <th>先攻勝率</th>
+    <th>後攻勝率</th>
+    <th>勝率</th>
+  `;
+      table.appendChild(header);
+
+      for (const cls of classes) {
+        const { total, win, firstWin, secondWin, firstTotal, secondTotal } = summary[cls];
+
+        const winRate = total ? ((win / total) * 100).toFixed(1) + '%' : '-';
+        const firstRate = firstTotal ? ((firstWin / firstTotal) * 100).toFixed(1) + '%' : '-';
+        const secondRate = secondTotal ? ((secondWin / secondTotal) * 100).toFixed(1) + '%' : '-';
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+      <td>${cls}</td>
+      <td>${total}</td>
+      <td>${win}</td>
+      <td>${firstRate}</td>
+      <td>${secondRate}</td>
+      <td>${winRate}</td>
+    `;
+        table.appendChild(row);
+      }
+
+      const container = document.getElementById('summary');
+      container.innerHTML = '';
+      container.appendChild(table);
+    }
+    function updateDeckImage() {
+      const container = document.getElementById('deckImageContainer');
+
+      // URLが存在しない場合はコンテナを非表示にする
+      if (!selectedDeck || !selectedDeck.url) {
+        container.style.display = 'none';
+        return;
+      }
+
+      // URLが存在する場合は表示して画像を追加
+      container.style.display = 'block';
+      container.innerHTML = '';
+
+      const img = document.createElement('img');
+      img.src = selectedDeck.url;
+      img.alt = selectedDeck.name;
+      container.appendChild(img);
+    }
+
+    displayTotalStats();
+    displayRecentStats();
+    displayClassStats();
+    updateDeckImage();
+  </script>
+</body>
+
+</html>

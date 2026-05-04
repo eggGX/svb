@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2デッキBo1一覧</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    /* レイアウト */
+    .page-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .page-head .spacer { flex: 1; }
+    .back-btn {
+      background-color: #2ed682;
+      color: #111;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* 一覧をグリッドで（横に2〜） */
+    #bo1List {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    /* カード */
+    .bo1-card {
+      border: 1px solid #555;
+      border-radius: 10px;
+      padding: 12px;
+      background-color: #2a2f3a;
+      box-shadow: 0 2px 5px rgba(0,0,0,.2);
+    }
+
+    /* 2デッキの行 */
+    .deck-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .deck-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      line-height: 1.1;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .deck-title img.icon {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* プレビューアイコン（🖼） */
+    .preview-toggle {
+      margin-left: auto;
+      background: #3a3f4a;
+      border: 1px solid #555;
+      color: #ddd;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .preview-toggle:hover {
+      background: #4a5060;
+    }
+
+    /* プレビュー領域（初期は非表示） */
+    .preview {
+      display: none;
+      margin-top: 8px;
+      background: #1f232c;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .preview img {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #555;
+      border-radius: 6px;
+    }
+
+    /* ボタン群（右寄せ） */
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .button-group button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      background: #004466;
+      color: #fff;
+    }
+    .button-group .danger {
+      background: #b83a41;
+    }
+
+    /* “プレビュー”の小ラベル（任意） */
+    .preview-label {
+      font-size: .9rem;
+      opacity: .85;
+      margin: 4px 0 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-head">
+    <h1 style="margin:0;">2デッキBo1データ一覧</h1>
+    <div class="spacer"></div>
+    <button class="back-btn" type="button" onclick="goBack()">← 戻る</button>
+  </div>
+
+  <div style="margin-bottom:10px;">
+    <button onclick="location.href='bo1_register.html'">新規追加</button>
+  </div>
+
+  <div id="bo1List"></div>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const decks = data.decks || [];
+    const bo1Decks = data.bo1Decks || [];
+
+    function getClassIconFilename(className) {
+      const map = {
+        "エルフ": "elf.svg",
+        "ロイヤル": "royal.svg",
+        "ウィッチ": "witch.svg",
+        "ドラゴン": "dragon.svg",
+        "ナイトメア": "nightmare.svg",
+        "ビショップ": "bishop.svg",
+        "ネメシス": "nemesis.svg"
+      };
+      return map[className] || "unknown.svg";
+    }
+
+    const container = document.getElementById('bo1List');
+
+    if (!bo1Decks.length) {
+      container.innerHTML = '<p>登録されたデータがありません。</p>';
+    } else {
+      bo1Decks.forEach(b => {
+        const deck1 = decks.find(d => d.id === b.deck1Id);
+        const deck2 = decks.find(d => d.id === b.deck2Id);
+
+        const card = document.createElement('div');
+        card.className = 'bo1-card';
+
+        // デッキ1行
+        const pair = document.createElement('div');
+        pair.className = 'deck-pair';
+
+        // 各デッキのタイトル行（右端にプレビューアイコン）
+        const t1 = document.createElement('div');
+        t1.className = 'deck-title';
+        t1.innerHTML = `
+          <img class="icon" src="images/${getClassIconFilename(deck1?.class)}" alt="${deck1?.class || ''}">
+          <span>${deck1 ? deck1.name : '(削除済み)'}</span>
+        `;
+        if (deck1?.url) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'preview-toggle';
+          btn.textContent = '🖼 プレビュー';
+          btn.addEventListener('click', () => togglePreview(pre1));
+          t1.appendChild(btn);
+        }
+
+        const t2 = document.createElement('div');
+        t2.className = 'deck-title';
+        t2.innerHTML = `
+          <img class="icon" src="images/${getClassIconFilename(deck2?.class)}" alt="${deck2?.class || ''}">
+          <span>${deck2 ? deck2.name : '(削除済み)'}</span>
+        `;
+        if (deck2?.url) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'preview-toggle';
+          btn.textContent = '🖼 プレビュー';
+          btn.addEventListener('click', () => togglePreview(pre2));
+          t2.appendChild(btn);
+        }
+
+        pair.appendChild(t1);
+        pair.appendChild(t2);
+        card.appendChild(pair);
+
+        // プレビュー領域（最初は非表示）
+        const preWrap = document.createElement('div');
+        preWrap.style.display = 'grid';
+        preWrap.style.gridTemplateColumns = '1fr 1fr';
+        preWrap.style.gap = '10px';
+
+        const pre1 = document.createElement('div');
+        pre1.className = 'preview';
+        if (deck1?.url) {
+          pre1.innerHTML = `
+            <div class="preview-label">デッキ1プレビュー</div>
+            <img src="${deck1.url}" alt="${deck1.name}">
+          `;
+        }
+
+        const pre2 = document.createElement('div');
+        pre2.className = 'preview';
+        if (deck2?.url) {
+          pre2.innerHTML = `
+            <div class="preview-label">デッキ2プレビュー</div>
+            <img src="${deck2.url}" alt="${deck2.name}">
+          `;
+        }
+
+        // URLがある方だけ追加
+        if (deck1?.url) preWrap.appendChild(pre1);
+        if (deck2?.url) preWrap.appendChild(pre2);
+
+        // どちらかにURLがあるときだけプレビューブロックを挿入
+        if (preWrap.children.length) {
+          card.appendChild(preWrap);
+        }
+
+        // 操作ボタン群
+        const btns = document.createElement('div');
+        btns.className = 'button-group';
+        btns.innerHTML = `
+          <button onclick="manageRecords('${b.id}')">戦績管理</button>
+          <button class="danger" onclick="deleteBo1('${b.id}')">削除</button>
+        `;
+        card.appendChild(btns);
+
+        container.appendChild(card);
+      });
+    }
+
+    function togglePreview(previewEl) {
+      // 他のプレビューは閉じず、個別トグル
+      const isShown = previewEl.style.display === 'block';
+      previewEl.style.display = isShown ? 'none' : 'block';
+    }
+
+    function manageRecords(id) {
+      localStorage.setItem('selectedBo1Id', id);
+      location.href = 'bo1_manage.html';
+    }
+
+    function deleteBo1(id) {
+      if (!confirm('このデータを削除しますか？')) return;
+      const idx = bo1Decks.findIndex(b => b.id === id);
+      if (idx !== -1) {
+        bo1Decks.splice(idx, 1);
+        data.bo1Decks = bo1Decks;
+        localStorage.setItem('shadowverseData', JSON.stringify(data));
+        location.reload();
+      }
+    }
+
+    function goBack() {
+      location.href = 'deck_select.html';
+    }
+  </script>
+</body>
+</html>

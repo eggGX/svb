@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2デッキBo1戦績管理</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    .class-button-group{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 20px;}
+    .class-button{border:2px solid transparent;border-radius:8px;padding:4px;background:transparent;cursor:pointer;transition:border .2s,background-color .2s;}
+    .class-button img{width:60px;height:60px;object-fit:contain;display:block;}
+    .class-button.selected{border:2px solid #2ed682;background:#eaffea;}
+    .select-button{padding:10px 20px;margin:5px;border:2px solid #ccc;border-radius:8px;background:#3399ff;color:#fff;cursor:pointer}
+    .select-button.selected{background:#2ed682;border-color:#2ed682;color:#000;font-weight:600}
+    .section{margin-bottom:24px}.hint{opacity:.8;margin:6px 0 0;font-size:.95rem}
+    #bo1Title{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+    .deck-chip{display:inline-flex;align-items:center;gap:8px;background:#2a2a2a;border:1px solid #555;border-radius:999px;padding:6px 12px}
+    .deck-chip img{width:22px;height:22px;object-fit:contain;display:block}
+    .actions{display:flex;gap:10px;margin-bottom:12px}
+  </style>
+</head>
+<body>
+  <h1>2デッキBo1戦績管理</h1>
+
+  <div class="actions">
+    <button onclick="location.href='bo1_list.html'">← 一覧へ</button>
+    <button onclick="location.href='bo1_history.html'">戦績を見る</button>
+  </div>
+
+  <h2 id="bo1Title"></h2>
+
+  <form id="recordForm">
+    <!-- 相手クラス（1列・最大2つ） -->
+    <div class="section">
+      <h3>相手のクラス（最大2つ選択）</h3>
+      <div id="opponentClassGroup" class="class-button-group"></div>
+      <div class="hint">2つまで選択できます（同じクラスは選べません）</div>
+    </div>
+
+    <!-- 実際に相手が使用したクラス（上で選んだ2つから） -->
+    <div class="section">
+      <h3>実際に相手が使用したクラス</h3>
+      <div id="opponentUsedGroup" class="class-button-group"></div>
+      <div class="hint">上で選んだ2クラスから選択してください</div>
+    </div>
+
+    <!-- 自分が使用したクラス（自分の2デッキのみ） -->
+    <div class="section">
+      <h3>自分が使用したクラス</h3>
+      <div id="myUsedGroup" class="class-button-group"></div>
+      <div class="hint">あなたの2デッキのクラスから選択してください</div>
+    </div>
+
+    <!-- 勝敗 -->
+    <div class="section">
+      <h3>勝敗</h3>
+      <div id="resultButtons">
+        <button type="button" class="select-button" data-value="win">勝ち</button>
+        <button type="button" class="select-button" data-value="lose">負け</button>
+      </div>
+    </div>
+
+    <button type="submit">登録</button>
+  </form>
+
+  <script>
+    // ===== データ取得 =====
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const decks = data.decks || [];
+    const bo1Id = localStorage.getItem('selectedBo1Id');
+    const bo1 = (data.bo1Decks || []).find(b => b.id === bo1Id);
+
+    if (!bo1) {
+      alert('対象のデータが見つかりません');
+      location.href = 'bo1_list.html';
+    }
+
+    const deck1 = decks.find(d => d.id === bo1.deck1Id);
+    const deck2 = decks.find(d => d.id === bo1.deck2Id);
+
+    const ALL_CLASSES = ["エルフ","ロイヤル","ウィッチ","ドラゴン","ナイトメア","ビショップ","ネメシス"];
+    const CLASS_ICON = {
+      "エルフ":"elf.svg","ロイヤル":"royal.svg","ウィッチ":"witch.svg","ドラゴン":"dragon.svg",
+      "ナイトメア":"nightmare.svg","ビショップ":"bishop.svg","ネメシス":"nemesis.svg"
+    };
+
+    // タイトル：クラスアイコン＋デッキ名
+    function renderTitle() {
+      const title = document.getElementById('bo1Title');
+      title.innerHTML = '';
+      [deck1, deck2].forEach(dk => {
+        if (!dk) return;
+        const chip = document.createElement('span');
+        chip.className = 'deck-chip';
+        chip.innerHTML = `<img src="images/${CLASS_ICON[dk.class] || 'unknown.svg'}" alt="${dk.class}"><span>${dk.name}</span>`;
+        title.appendChild(chip);
+      });
+    }
+    renderTitle();
+
+    // ===== 選択状態 =====
+    let selectedOpponentClasses = []; // 相手クラス（最大2）
+    let selectedOppUsed = null;       // 実際に相手が使用
+    let selectedMyUsed = null;        // 自分が使用
+    let selectedResult = null;        // 'win' | 'lose'
+
+    const opponentClassGroup = document.getElementById('opponentClassGroup');
+    const oppUsedGroup = document.getElementById('opponentUsedGroup');
+    const myUsedGroup = document.getElementById('myUsedGroup');
+
+    // 共通：単一選択ボタン群
+    function createClassButtons(container, classes, onSelect, currentValue) {
+      container.innerHTML = '';
+      classes.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'class-button' + (currentValue === c ? ' selected' : '');
+        btn.dataset.class = c;
+        btn.innerHTML = `<img src="images/${CLASS_ICON[c] || 'unknown.svg'}" alt="${c}" />`;
+        btn.addEventListener('click', () => {
+          [...container.querySelectorAll('.class-button')].forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          onSelect(c);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    // 相手クラス（最大2）トグル選択
+    function refreshOpponentClassButtons() {
+      opponentClassGroup.innerHTML = '';
+      ALL_CLASSES.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isSel = selectedOpponentClasses.includes(c);
+        btn.className = 'class-button' + (isSel ? ' selected' : '');
+        btn.dataset.class = c;
+        btn.innerHTML = `<img src="images/${CLASS_ICON[c] || 'unknown.svg'}" alt="${c}" />`;
+        btn.addEventListener('click', () => {
+          if (selectedOpponentClasses.includes(c)) {
+            selectedOpponentClasses = selectedOpponentClasses.filter(cls => cls !== c);
+          } else {
+            if (selectedOpponentClasses.length >= 2) {
+              alert('選択できるのは最大2クラスまでです');
+              return;
+            }
+            selectedOpponentClasses.push(c);
+          }
+          if (!selectedOpponentClasses.includes(selectedOppUsed)) selectedOppUsed = null;
+          refreshOpponentClassButtons();
+          refreshOpponentUsedButtons();
+        });
+        opponentClassGroup.appendChild(btn);
+      });
+    }
+
+    // 実際に相手が使用：相手で選んだ2つから
+    function refreshOpponentUsedButtons() {
+      const candidates = selectedOpponentClasses.slice();
+      if (candidates.length === 0) {
+        oppUsedGroup.innerHTML = '<div class="hint">まず相手のクラスを選択してください</div>';
+        return;
+      }
+      createClassButtons(oppUsedGroup, candidates, (c) => { selectedOppUsed = c; }, selectedOppUsed);
+    }
+
+    // 自分が使用：自分の2デッキのみ
+    function refreshMyUsedButtons() {
+      const myCandidates = [deck1?.class, deck2?.class].filter(Boolean);
+      if (!myCandidates.length) {
+        myUsedGroup.innerHTML = '<div class="hint">あなたのデッキが見つかりません</div>';
+        return;
+      }
+      createClassButtons(myUsedGroup, myCandidates, (c) => { selectedMyUsed = c; }, selectedMyUsed);
+    }
+
+    // 初期描画
+    refreshOpponentClassButtons();
+    refreshOpponentUsedButtons();
+    refreshMyUsedButtons();
+
+    // 勝敗ボタン
+    document.querySelectorAll('#resultButtons .select-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#resultButtons .select-button').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedResult = btn.dataset.value; // 'win' or 'lose'
+      });
+    });
+
+    // 登録
+    document.getElementById('recordForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (selectedOpponentClasses.length !== 2) {
+        alert('相手のクラスを2つ選択してください'); return;
+      }
+      const [oc1, oc2] = selectedOpponentClasses;
+      if (!selectedOppUsed) { alert('相手が実際に使用したクラスを選択してください'); return; }
+      if (!selectedMyUsed) { alert('自分が実際に使用したクラスを選択してください'); return; }
+      if (!selectedResult) { alert('勝敗を選択してください'); return; }
+
+      bo1.records = bo1.records || [];
+      bo1.records.push({
+        oc1,
+        oc2,
+        ou: selectedOppUsed,
+        mu: selectedMyUsed,
+        result: selectedResult,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('shadowverseData', JSON.stringify(data));
+      alert('登録しました');
+      // 入力だけの画面なので、履歴は別ページへ
+      location.href = 'bo1_history.html';
+    });
+  </script>
+</body>
+</html>

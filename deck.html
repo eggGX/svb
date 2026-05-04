@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <title>デッキ登録</title>
+  <link rel="stylesheet" href="style/style.css">
+  <style>
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>使用デッキのクラスを選択してください</h1>
+
+  <div id="class-buttons"></div>
+
+  <script>
+    const classes = ['エルフ', 'ロイヤル', 'ウィッチ', 'ドラゴン', 'ナイトメア', 'ビショップ', 'ネメシス'];
+
+    const buttonContainer = document.getElementById('class-buttons');
+
+    classes.forEach(cls => {
+      const btn = document.createElement('button');
+      btn.textContent = cls;
+      btn.onclick = () => selectClass(cls);
+      buttonContainer.appendChild(btn);
+    });
+
+    function selectClass(selectedClass) {
+      const data = {
+        playerClass: selectedClass,
+        records: []
+      };
+      localStorage.setItem('shadowverseData', JSON.stringify(data));
+      location.href = 'battle.html';
+    }
+  </script>
+</body>
+
+</html>

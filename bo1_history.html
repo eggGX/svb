@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2デッキBo1 戦績</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th,td{border:1px solid #555;padding:8px 10px;text-align:center}
+    th{background:#333}
+    .icon{width:24px;height:24px;object-fit:contain;vertical-align:middle}
+    .pair{display:flex;gap:8px;justify-content:center;align-items:center}
+    .header-actions{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+    .header-actions .spacer{flex:1}
+    .usage-pair{display:flex;gap:8px;align-items:center;justify-content:center}
+    .subcell{display:flex;gap:12px;align-items:center;justify-content:center}
+    .count-badge{min-width:2.5em;display:inline-block}
+
+    /* クラスアイコンフィルタ */
+    .class-button-group{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}
+    .class-button{border:2px solid transparent;border-radius:8px;padding:4px;background:transparent;cursor:pointer;transition:border .2s,background-color .2s}
+    .class-button img{width:40px;height:40px;object-fit:contain;display:block}
+    .class-button.selected{border:2px solid #2ed682;background:#eaffea;}
+  </style>
+</head>
+<body>
+  <h1>戦績</h1>
+
+  <div class="header-actions">
+    <button onclick="location.href='bo1_manage.html'">← 戦績入力へ</button>
+    <button onclick="location.href='bo1_list.html'">一覧へ</button>
+    <span class="spacer"></span>
+    <button id="toggleBtn">表示切替：使用内訳</button>
+  </div>
+
+  <!-- クラスフィルタ -->
+  <div id="filterGroup" class="class-button-group"></div>
+
+  <h2 id="bo1Title"></h2>
+
+  <h2>今日・直近の統計</h2>
+  <div id="recentStats"></div>
+
+  <div id="tableArea"></div>
+
+  <script>
+    // ====== データ読み込み ======
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const decks = data.decks || [];
+    const bo1Id = localStorage.getItem('selectedBo1Id');
+    const bo1 = (data.bo1Decks || []).find(b => b.id === bo1Id);
+
+    if (!bo1) {
+      alert('対象のデータが見つかりません');
+      location.href = 'bo1_list.html';
+    }
+
+    const deck1 = decks.find(d => d.id === bo1.deck1Id);
+    const deck2 = decks.find(d => d.id === bo1.deck2Id);
+
+    // ソート順を固定する配列
+    const CLASSES = ["エルフ","ロイヤル","ウィッチ","ドラゴン","ナイトメア","ビショップ","ネメシス"];
+    const CLASS_ICON = {
+      "エルフ":"elf.svg","ロイヤル":"royal.svg","ウィッチ":"witch.svg","ドラゴン":"dragon.svg",
+      "ナイトメア":"nightmare.svg","ビショップ":"bishop.svg","ネメシス":"nemesis.svg"
+    };
+
+    function iconHtml(cls) {
+      const src = `images/${CLASS_ICON[cls] || 'unknown.svg'}`;
+      return `<img class="icon" src="${src}" alt="${cls}" title="${cls}">`;
+    }
+
+    // ====== タイトル ======
+    const title = document.getElementById('bo1Title');
+    title.innerHTML = '';
+    [deck1, deck2].forEach(dk => {
+      if (!dk) return;
+      const span = document.createElement('span');
+      span.style.marginRight = '12px';
+      span.innerHTML = `${iconHtml(dk.class)} ${dk.name}`;
+      title.appendChild(span);
+    });
+
+    // ====== フィルタ ======
+    let selectedFilter = null;
+    const filterGroup = document.getElementById('filterGroup');
+    CLASSES.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'class-button';
+      btn.innerHTML = `<img src="images/${CLASS_ICON[c]}" alt="${c}" />`;
+      btn.addEventListener('click', () => {
+        if (selectedFilter === c) {
+          selectedFilter = null;
+          btn.classList.remove('selected');
+        } else {
+          selectedFilter = c;
+          [...filterGroup.querySelectorAll('.class-button')].forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        }
+        renderRecentStats();
+    render();
+      });
+      filterGroup.appendChild(btn);
+    });
+
+    // ====== 表示切替 ======
+    let mode = 'records';
+    const toggleBtn = document.getElementById('toggleBtn');
+    toggleBtn.addEventListener('click', () => {
+      mode = (mode === 'records') ? 'usage' : 'records';
+      toggleBtn.textContent = (mode === 'records') ? '表示切替：使用内訳' : '表示切替：対戦履歴';
+      renderRecentStats();
+    render();
+    });
+
+
+    function formatDateTime(value) {
+      if (!value) return '-';
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return '-';
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function isTodayRecord(record) {
+      if (!record.createdAt) return false;
+      const recordDate = new Date(record.createdAt);
+      if (Number.isNaN(recordDate.getTime())) return false;
+      const today = new Date();
+      return recordDate.getFullYear() === today.getFullYear()
+        && recordDate.getMonth() === today.getMonth()
+        && recordDate.getDate() === today.getDate();
+    }
+
+    function formatRate(winCount, total) {
+      return total ? ((winCount / total) * 100).toFixed(1) + '%' : '-';
+    }
+
+    function createStatsHtml(title, records) {
+      const total = records.length;
+      const win = records.filter(r => r.result === 'win').length;
+      return `
+        <div class="stat-card">
+          <h3>${title}</h3>
+          <p>対戦数: ${total}</p>
+          <p>勝利数: ${win}</p>
+          <p>勝率: ${formatRate(win, total)}</p>
+        </div>
+      `;
+    }
+
+    function renderRecentStats() {
+      const records = bo1.records || [];
+      const todayRecords = records.filter(isTodayRecord);
+      const recent10Records = records.slice(-10).reverse();
+      document.getElementById('recentStats').innerHTML = `
+        <div class="stat-card-area">
+          ${createStatsHtml('今日', todayRecords)}
+          ${createStatsHtml('直近10戦', recent10Records)}
+        </div>
+      `;
+    }
+
+    // ====== 対戦履歴テーブル ======
+    function renderRecordsTable() {
+      const wrap = document.createElement('div');
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr>
+          <th>日時</th>
+          <th>相手クラス</th>
+          <th>相手使用</th>
+          <th>自分使用</th>
+          <th>勝敗</th>
+        </tr>
+      `;
+      (bo1.records || []).forEach(r => {
+        if (selectedFilter && !(r.oc1 === selectedFilter || r.oc2 === selectedFilter)) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDateTime(r.createdAt)}</td>
+          <td><span class="pair">${iconHtml(r.oc1)} ${iconHtml(r.oc2)}</span></td>
+          <td>${iconHtml(r.ou)}</td>
+          <td>${iconHtml(r.mu)}</td>
+          <td>${r.result === 'win' ? '勝ち' : '負け'}</td>
+        `;
+        table.appendChild(tr);
+      });
+      wrap.appendChild(table);
+      return wrap;
+    }
+
+    // ====== 使用内訳テーブル ======
+    function renderUsageTable() {
+      const usageMap = {};
+      for (let i = 0; i < CLASSES.length; i++) {
+        for (let j = i + 1; j < CLASSES.length; j++) {
+          const a = CLASSES[i], b = CLASSES[j];
+          usageMap[a + "|" + b] = { a, b, countA: 0, countB: 0, total: 0 };
+        }
+      }
+
+      (bo1.records || []).forEach(r => {
+        if (!r.oc1 || !r.oc2) return;
+        let a = r.oc1, b = r.oc2;
+        let ai = CLASSES.indexOf(a), bi = CLASSES.indexOf(b);
+        if (ai > bi) [ai, bi, a, b] = [bi, ai, b, a];
+        const key = CLASSES[ai] + "|" + CLASSES[bi];
+        const entry = usageMap[key];
+        if (!entry) return;
+        if (r.ou === entry.a) entry.countA++;
+        else if (r.ou === entry.b) entry.countB++;
+        entry.total++;
+      });
+
+      const wrap = document.createElement('div');
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <tr><th>組み合わせ</th><th>使用内訳</th><th>合計</th></tr>
+      `;
+
+      CLASSES.forEach((a, i) => {
+        for (let j = i + 1; j < CLASSES.length; j++) {
+          const b = CLASSES[j];
+          if (selectedFilter && !(a === selectedFilter || b === selectedFilter)) continue;
+          const { countA, countB, total } = usageMap[a + "|" + b];
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><div class="usage-pair">${iconHtml(a)} ${iconHtml(b)}</div></td>
+            <td><div class="subcell">
+              <span>${iconHtml(a)} <span class="count-badge">${countA}</span></span>
+              <span>${iconHtml(b)} <span class="count-badge">${countB}</span></span>
+            </div></td>
+            <td>${total}</td>
+          `;
+          table.appendChild(tr);
+        }
+      });
+      wrap.appendChild(table);
+      return wrap;
+    }
+
+    // ====== レンダリング ======
+    function render() {
+      const area = document.getElementById('tableArea');
+      area.innerHTML = '';
+      area.appendChild(mode === 'records' ? renderRecordsTable() : renderUsageTable());
+    }
+    renderRecentStats();
+    render();
+  </script>
+</body>
+</html>

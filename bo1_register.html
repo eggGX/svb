@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2デッキBo1登録</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    .deck-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 8px 10px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      background: #2a2a2a;
+    }
+    .deck-preview img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+    .field {
+      margin-bottom: 18px;
+    }
+    .form-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>2デッキBo1登録</h1>
+
+  <form id="registerForm">
+    <div class="field">
+      <label for="deck1Select">デッキ1:</label><br>
+      <select id="deck1Select" required></select>
+      <div id="deck1Preview" class="deck-preview" aria-live="polite"></div>
+    </div>
+
+    <div class="field">
+      <label for="deck2Select">デッキ2:</label><br>
+      <select id="deck2Select" required></select>
+      <div id="deck2Preview" class="deck-preview" aria-live="polite"></div>
+    </div>
+
+    <div class="form-buttons">
+      <button type="submit">登録</button>
+      <button type="button" onclick="goBack()">戻る</button>
+    </div>
+  </form>
+
+  <script>
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const decks = data.decks || [];
+
+    const deck1Select = document.getElementById('deck1Select');
+    const deck2Select = document.getElementById('deck2Select');
+    const deck1Preview = document.getElementById('deck1Preview');
+    const deck2Preview = document.getElementById('deck2Preview');
+
+    function getClassIconFilename(className) {
+      const map = {
+        "エルフ": "elf.svg",
+        "ロイヤル": "royal.svg",
+        "ウィッチ": "witch.svg",
+        "ドラゴン": "dragon.svg",
+        "ナイトメア": "nightmare.svg",
+        "ビショップ": "bishop.svg",
+        "ネメシス": "nemesis.svg"
+      };
+      return map[className] || "unknown.svg";
+    }
+
+    // デッキ選択肢生成
+    decks.forEach(deck => {
+      const opt1 = document.createElement('option');
+      opt1.value = deck.id;
+      opt1.textContent = `${deck.name}（${deck.class}）`;
+      deck1Select.appendChild(opt1);
+
+      const opt2 = document.createElement('option');
+      opt2.value = deck.id;
+      opt2.textContent = `${deck.name}（${deck.class}）`;
+      deck2Select.appendChild(opt2);
+    });
+
+    function findDeck(id) {
+      return decks.find(d => d.id === id);
+    }
+
+    function renderPreview(container, deck) {
+      if (!deck) {
+        container.innerHTML = '<span style="opacity:.7">未選択</span>';
+        return;
+      }
+      const icon = `images/${getClassIconFilename(deck.class)}`;
+      container.innerHTML = `
+        <img src="${icon}" alt="${deck.class}">
+        <span>${deck.name}</span>
+      `;
+    }
+
+    // 初期プレビュー
+    renderPreview(deck1Preview, findDeck(deck1Select.value));
+    renderPreview(deck2Preview, findDeck(deck2Select.value));
+
+    // 変更時にプレビュー更新
+    deck1Select.addEventListener('change', () => {
+      renderPreview(deck1Preview, findDeck(deck1Select.value));
+    });
+    deck2Select.addEventListener('change', () => {
+      renderPreview(deck2Preview, findDeck(deck2Select.value));
+    });
+
+    // 同じクラス禁止チェック
+    function validateClasses() {
+      const d1 = findDeck(deck1Select.value);
+      const d2 = findDeck(deck2Select.value);
+      if (d1 && d2 && d1.class === d2.class) {
+        alert('同じクラスのデッキは選択できません');
+        return false;
+      }
+      return true;
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (!validateClasses()) return;
+
+      const newBo1 = {
+        id: 'bo1_' + Date.now(),
+        deck1Id: deck1Select.value,
+        deck2Id: deck2Select.value,
+        records: []
+      };
+
+      if (!data.bo1Decks) data.bo1Decks = [];
+      data.bo1Decks.push(newBo1);
+      localStorage.setItem('shadowverseData', JSON.stringify(data));
+      location.href = 'bo1_list.html';
+    });
+
+    function goBack() {
+      location.href = 'bo1_list.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shadowverse 戦績管理</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    body {
+      background-image: url("images/SVWB_LOG.png");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+    }
+    /* ファイル選択inputは非表示 */
+    #importFile { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Shadowverse 戦績管理</h1>
+
+  <div id="topButtons">
+    <button onclick="location.href='deck_select.html'">スタート</button>
+
+    <!-- エクスポート（インポートの左） -->
+    <button onclick="exportAll()">エクスポート</button>
+
+    <!-- インポート（inputは隠してlabelをボタン風に） -->
+    <input type="file" id="importFile" accept=".json" onchange="handleImport(event)" />
+    <label for="importFile" class="button">インポート</label>
+
+    <!-- データクリア -->
+    <button class="clear-button" onclick="clearData()">データをクリア</button>
+  </div>
+
+  <script>
+    // エクスポート：localStorageの全データ（shadowverseData）を書き出し
+    function exportAll() {
+      const raw = localStorage.getItem('shadowverseData') || '{}';
+      // ファイル名に日時を付与
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      const fileName =
+        `shadowverse_export_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_` +
+        `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}.json`;
+
+      try {
+        JSON.parse(raw); // 一応JSONとして妥当かチェック
+      } catch (e) {
+        alert('エクスポート対象のデータが壊れている可能性があります。');
+        return;
+      }
+
+      const blob = new Blob([raw], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // インポート：書き出したJSONを読み込んで置き換え
+    function handleImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (!importedData || typeof importedData !== 'object' || Array.isArray(importedData)) {
+            alert('正しいデータ形式ではありません。');
+            return;
+          }
+          if (importedData.decks && !Array.isArray(importedData.decks)) {
+            alert('デッキ情報の形式が正しくありません。');
+            return;
+          }
+          if (importedData.bo1Decks && !Array.isArray(importedData.bo1Decks)) {
+            alert('BO1情報の形式が正しくありません。');
+            return;
+          }
+          localStorage.setItem('shadowverseData', JSON.stringify(importedData));
+          alert('インポート完了しました。');
+          location.reload();
+        } catch (err) {
+          alert('JSONの読み込みに失敗しました。');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // クリア
+    function clearData() {
+      if (confirm('ローカルストレージのデータを全てクリアします。よろしいですか？')) {
+        localStorage.removeItem('shadowverseData');
+        alert('データをクリアしました。ページを再読み込みします。');
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

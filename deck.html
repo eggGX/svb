@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>デッキ登録</title>
   <link rel="stylesheet" href="style/style.css">
   <style>
@@ -12,6 +13,130 @@
       font-size: 18px;
     }
   </style>
+<style>
+
+/* =========================================================
+   Ver2.6 fix: class icon layout normalization
+   - all class buttons are centered
+   - SVGs never overflow their frames
+   - button groups wrap inside panels instead of spilling out
+========================================================= */
+.class-button-group,
+#classButtons,
+#class-buttons,
+.class-buttons {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  margin: 10px 0 22px !important;
+  overflow: visible !important;
+}
+
+.class-button,
+#classButtons button,
+#class-buttons button,
+.class-buttons button {
+  width: 88px !important;
+  height: 74px !important;
+  min-width: 88px !important;
+  min-height: 74px !important;
+  max-width: 88px !important;
+  max-height: 74px !important;
+  box-sizing: border-box !important;
+  padding: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  line-height: 1 !important;
+}
+
+.class-button img,
+.class-button svg,
+#classButtons button img,
+#classButtons button svg,
+#class-buttons button img,
+#class-buttons button svg,
+.class-buttons button img,
+.class-buttons button svg,
+#classButtons .class-icon,
+#class-buttons .class-icon,
+.class-buttons .class-icon {
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  display: block !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  flex: 0 0 auto !important;
+  position: static !important;
+  transform: none !important;
+}
+
+/* small icons used in list/table headers */
+.class-chip,
+.icon,
+.deck-title img.icon,
+img.icon {
+  display: inline-block !important;
+  object-fit: contain !important;
+  vertical-align: middle !important;
+  flex: 0 0 auto !important;
+}
+
+/* prevent top-level panels from clipping contents unexpectedly */
+#inputArea,
+#summary,
+#totalStats,
+#recentStats,
+#chartContainer,
+.section,
+.field,
+.deck,
+.bo1-card {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 560px) {
+  .class-button,
+  #classButtons button,
+  #class-buttons button,
+  .class-buttons button {
+    width: 72px !important;
+    height: 64px !important;
+    min-width: 72px !important;
+    min-height: 64px !important;
+    max-width: 72px !important;
+    max-height: 64px !important;
+    padding: 7px !important;
+  }
+  .class-button img,
+  .class-button svg,
+  #classButtons button img,
+  #classButtons button svg,
+  #class-buttons button img,
+  #class-buttons button svg,
+  .class-buttons button img,
+  .class-buttons button svg,
+  #classButtons .class-icon,
+  #class-buttons .class-icon,
+  .class-buttons .class-icon {
+    width: 46px !important;
+    height: 46px !important;
+    max-width: 46px !important;
+    max-height: 46px !important;
+  }
+}
+</style>
 </head>
 
 <body>

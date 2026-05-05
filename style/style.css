@@ -434,3 +434,468 @@ th { background-color: var(--primary); }
 .stat-card p {
   margin: 6px 0;
 }
+
+
+/* ==========================================================================
+   Ver.2.5 Shadowverse "GACHI" UI override
+   既存HTML/JSを壊さず、全画面をカードゲーム風の重厚UIに寄せる
+========================================================================== */
+:root {
+  --bg: #070915;
+  --fg: #f7f0d6;
+  --muted: #b7b9d6;
+  --card: rgba(13, 18, 42, .86);
+  --card-strong: rgba(18, 23, 55, .94);
+  --card-border: rgba(218, 186, 99, .55);
+  --primary: #3523a8;
+  --primary-hover: #5c39ff;
+  --accent: #e9c76a;
+  --accent-2: #7ee8ff;
+  --danger: #8c1d2d;
+  --danger-hover: #d73654;
+  --shadow-gold: 0 0 18px rgba(233,199,106,.32), inset 0 0 20px rgba(255,255,255,.035);
+  --shadow-blue: 0 0 22px rgba(83,128,255,.35);
+}
+
+html { min-height: 100%; }
+* { box-sizing: border-box; }
+body {
+  margin: 0 !important;
+  min-height: 100vh;
+  padding: 28px !important;
+  color: var(--fg) !important;
+  font-family: "Trebuchet MS", "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif !important;
+  letter-spacing: .02em;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(95,69,255,.36), transparent 35%),
+    radial-gradient(circle at 82% 12%, rgba(233,199,106,.22), transparent 32%),
+    radial-gradient(circle at 50% 100%, rgba(25,156,255,.18), transparent 42%),
+    linear-gradient(145deg, #04050d 0%, #0b1130 48%, #07070d 100%) !important;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, rgba(255,255,255,.05) 45%, transparent 46% 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 80px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 80px);
+  mask-image: radial-gradient(circle at center, black, transparent 78%);
+  z-index: -1;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: auto -10% -22% -10%;
+  height: 42vh;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(61,100,255,.28), transparent 62%);
+  filter: blur(18px);
+  z-index: -1;
+}
+
+h1, h2, h3 {
+  color: #fff7dc !important;
+  text-shadow: 0 0 10px rgba(233,199,106,.55), 0 0 26px rgba(76,114,255,.35);
+  letter-spacing: .06em;
+}
+h1 {
+  margin: 6px 0 26px !important;
+  font-size: clamp(2rem, 4vw, 3.6rem) !important;
+  text-align: center;
+  position: relative;
+}
+h1::after {
+  content: "";
+  display: block;
+  width: min(640px, 86vw);
+  height: 2px;
+  margin: 14px auto 0;
+  background: linear-gradient(90deg, transparent, rgba(126,232,255,.75), rgba(233,199,106,.95), rgba(126,232,255,.75), transparent);
+  box-shadow: 0 0 18px rgba(233,199,106,.65);
+}
+h2 {
+  margin-top: 30px !important;
+  border-left: 4px solid var(--accent);
+  padding: 9px 0 9px 14px;
+  background: linear-gradient(90deg, rgba(233,199,106,.16), transparent 70%);
+  border-radius: 0 16px 16px 0;
+}
+h3 { color: #f1d992 !important; }
+p, label, li, td, th, div { color: inherit; }
+
+body > div:not(#deckImageContainer):not(#topButtons):not(.image-lightbox),
+form,
+#summary,
+#totalStats,
+#recentStats,
+#resultArea,
+#chartContainer,
+#inputArea,
+#deckList,
+#bo1List,
+#filterGroup,
+.class-buttons,
+.section,
+.field,
+.deck-preview,
+.header-actions,
+.actions,
+.page-head,
+.new-deck {
+  position: relative;
+}
+
+form,
+#inputArea,
+#summary,
+#totalStats,
+#recentStats,
+#chartContainer,
+.deck,
+.bo1-card,
+.stat-card,
+.deck-preview,
+.section,
+.field,
+body > div:not(#deckImageContainer):not(#topButtons):not(.image-lightbox):not(#deckList):not(#bo1List):not(#filterGroup):not(.class-button-group):not(.class-buttons):not(.header-actions):not(.actions):not(.page-head) {
+  background: linear-gradient(180deg, rgba(22,29,72,.88), rgba(8,12,30,.88)) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 18px !important;
+  box-shadow: var(--shadow-gold), 0 18px 38px rgba(0,0,0,.35) !important;
+  backdrop-filter: blur(9px);
+}
+
+form, #inputArea, #summary, #totalStats, #recentStats, #chartContainer, .section, .field {
+  padding: 18px !important;
+  margin-bottom: 18px !important;
+}
+
+button, .button, label.button, .back-btn, .bo1-link, .select-button {
+  appearance: none;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(233,199,106,.72) !important;
+  border-radius: 999px !important;
+  color: #fff7de !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,0) 42%),
+    linear-gradient(135deg, #1b2e82 0%, #5626b6 48%, #9a6f21 100%) !important;
+  box-shadow: 0 0 14px rgba(87,103,255,.34), inset 0 0 13px rgba(255,255,255,.08) !important;
+  text-transform: none;
+  font-weight: 800 !important;
+  letter-spacing: .05em;
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease !important;
+}
+button::before, .button::before, label.button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-25deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+  transition: transform .42s ease;
+}
+button:hover, .button:hover, label.button:hover, .back-btn:hover, .bo1-link:hover, .select-button:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.13);
+  box-shadow: 0 0 20px rgba(233,199,106,.45), 0 0 26px rgba(83,128,255,.38) !important;
+}
+button:hover::before, .button:hover::before, label.button:hover::before { transform: translateX(120%) skewX(-25deg); }
+button:active, .button:active { transform: translateY(1px) scale(.99); }
+button.clear-button, button.danger, .button-group .right button {
+  background: linear-gradient(135deg, #531122, #b92745 55%, #6c121d) !important;
+  border-color: rgba(255,110,132,.85) !important;
+}
+
+input[type="text"], textarea, select {
+  background: rgba(1,4,14,.72) !important;
+  color: #fff9e8 !important;
+  border: 1px solid rgba(126,232,255,.42) !important;
+  border-radius: 12px !important;
+  box-shadow: inset 0 0 14px rgba(0,0,0,.45), 0 0 12px rgba(126,232,255,.08);
+  outline: none;
+}
+input[type="text"]:focus, textarea:focus, select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(233,199,106,.16), inset 0 0 14px rgba(0,0,0,.45) !important;
+}
+
+/* Tables */
+table {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  overflow: hidden;
+  border: 1px solid rgba(233,199,106,.45) !important;
+  border-radius: 16px !important;
+  background: rgba(3,7,22,.76);
+  box-shadow: var(--shadow-gold);
+}
+th, td {
+  background: rgba(12,18,45,.78) !important;
+  border-color: rgba(233,199,106,.25) !important;
+}
+th {
+  background: linear-gradient(180deg, rgba(79,62,165,.96), rgba(16,30,93,.96)) !important;
+  color: #ffe9a8 !important;
+}
+tr:hover td { background: rgba(36,49,104,.86) !important; }
+
+/* Cards */
+#deckList, #bo1List { gap: 22px !important; }
+.deck, .bo1-card, .stat-card {
+  transform: translateZ(0);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.deck:hover, .bo1-card:hover, .stat-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,223,136,.9) !important;
+  box-shadow: 0 0 26px rgba(233,199,106,.35), 0 22px 44px rgba(0,0,0,.42) !important;
+}
+.deck-title, .page-head, .header-actions, .actions, .form-buttons, .button-group {
+  gap: 12px !important;
+}
+.deck-name { color: #fff2bf !important; text-shadow: 0 0 9px rgba(233,199,106,.35); }
+.deck-memo, .hint { color: var(--muted) !important; }
+.thumb, #imagePreview, .deck-preview {
+  background: radial-gradient(circle at center, rgba(126,232,255,.09), rgba(4,6,18,.84)) !important;
+  border-color: rgba(126,232,255,.35) !important;
+}
+
+/* Class icons */
+.class-button-group, #classButtons, #class-buttons {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+}
+.class-button, #classButtons button, #class-buttons button, .class-buttons button {
+  min-width: 86px;
+  min-height: 72px;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(126,232,255,.18), transparent 56%),
+    linear-gradient(180deg, rgba(26,35,88,.92), rgba(7,10,26,.92)) !important;
+  border: 1px solid rgba(126,232,255,.42) !important;
+  border-radius: 18px !important;
+  color: #fff7dd !important;
+  box-shadow: 0 0 13px rgba(126,232,255,.12), inset 0 0 18px rgba(255,255,255,.04) !important;
+}
+.class-button img, #classButtons .class-icon, .class-chip, .icon {
+  filter: drop-shadow(0 0 8px rgba(126,232,255,.45));
+}
+.class-button:hover, #classButtons button:hover, #class-buttons button:hover, .class-buttons button:hover {
+  transform: translateY(-3px) scale(1.04) !important;
+  border-color: rgba(233,199,106,.85) !important;
+  box-shadow: 0 0 20px rgba(233,199,106,.35), 0 0 24px rgba(126,232,255,.22) !important;
+}
+.class-button.selected, #classButtons button.selected, #class-buttons button.selected, .class-buttons button.selected, .selected {
+  color: #171009 !important;
+  background: linear-gradient(180deg, #fff2b8, #dfad48 60%, #8f621d) !important;
+  border-color: #fff3ba !important;
+  box-shadow: 0 0 24px rgba(233,199,106,.68), inset 0 0 12px rgba(255,255,255,.38) !important;
+}
+
+/* Battle/deck fixed preview */
+#deckImageContainer {
+  background: linear-gradient(180deg, rgba(22,29,72,.94), rgba(5,7,19,.94)) !important;
+  border: 1px solid rgba(233,199,106,.75) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 0 28px rgba(233,199,106,.28), 0 24px 48px rgba(0,0,0,.42) !important;
+}
+#deckImageContainer::before {
+  content: "DECK";
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  z-index: 2;
+  font-size: 12px;
+  color: #ffe7a0;
+  letter-spacing: .16em;
+  text-shadow: 0 0 8px rgba(233,199,106,.7);
+}
+
+/* Top page */
+#topButtons {
+  width: min(760px, 94vw);
+  margin: 10vh auto 0 !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 18px;
+  padding: 28px !important;
+  background: linear-gradient(180deg, rgba(8,12,30,.62), rgba(8,12,30,.9)) !important;
+  border: 1px solid rgba(233,199,106,.58) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 0 35px rgba(233,199,106,.24), 0 30px 70px rgba(0,0,0,.42) !important;
+  backdrop-filter: blur(8px);
+}
+#topButtons button, #topButtons .button {
+  width: 100% !important;
+  min-height: 58px;
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stats */
+.stat-card-area { gap: 18px !important; }
+.stat-card h3 { color: #ffe7a0 !important; }
+.stat-card p { color: #f7f0d6 !important; }
+
+/* Lightbox */
+.image-lightbox__backdrop { background: rgba(0,0,0,.82) !important; backdrop-filter: blur(5px); }
+.image-lightbox__content {
+  background: linear-gradient(180deg, rgba(20,28,70,.95), rgba(5,8,20,.98)) !important;
+  border-color: rgba(233,199,106,.72) !important;
+  box-shadow: 0 0 36px rgba(233,199,106,.28) !important;
+}
+.image-lightbox__close { background: linear-gradient(135deg, #531122, #b92745) !important; }
+
+/* Mobile */
+@media (max-width: 900px) {
+  body { padding: 16px !important; }
+  #resultArea { width: 100% !important; gap: 18px !important; }
+  #inputArea { margin-right: 0 !important; max-width: 100% !important; }
+  #deckImageContainer {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 220px;
+    margin: 0 0 18px !important;
+  }
+  .top-right-actions { position: static !important; margin-bottom: 16px; }
+  .header-actions, .actions, .page-head, .button-group, .form-buttons { flex-wrap: wrap !important; }
+  table { font-size: 13px; }
+  th, td { padding: 7px 6px !important; }
+}
+@media (max-width: 560px) {
+  h1 { font-size: 1.75rem !important; }
+  #topButtons { grid-template-columns: 1fr; margin-top: 6vh !important; }
+  button, .button { width: 100%; }
+  .class-button, #classButtons button, #class-buttons button, .class-buttons button { min-width: 74px; }
+}
+
+
+/* =========================================================
+   Ver2.6 fix: class icon layout normalization
+   - all class buttons are centered
+   - SVGs never overflow their frames
+   - button groups wrap inside panels instead of spilling out
+========================================================= */
+.class-button-group,
+#classButtons,
+#class-buttons,
+.class-buttons {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+  margin: 10px 0 22px !important;
+  overflow: visible !important;
+}
+
+.class-button,
+#classButtons button,
+#class-buttons button,
+.class-buttons button {
+  width: 88px !important;
+  height: 74px !important;
+  min-width: 88px !important;
+  min-height: 74px !important;
+  max-width: 88px !important;
+  max-height: 74px !important;
+  box-sizing: border-box !important;
+  padding: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  line-height: 1 !important;
+}
+
+.class-button img,
+.class-button svg,
+#classButtons button img,
+#classButtons button svg,
+#class-buttons button img,
+#class-buttons button svg,
+.class-buttons button img,
+.class-buttons button svg,
+#classButtons .class-icon,
+#class-buttons .class-icon,
+.class-buttons .class-icon {
+  width: 58px !important;
+  height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  display: block !important;
+  margin: auto !important;
+  object-fit: contain !important;
+  flex: 0 0 auto !important;
+  position: static !important;
+  transform: none !important;
+}
+
+/* small icons used in list/table headers */
+.class-chip,
+.icon,
+.deck-title img.icon,
+img.icon {
+  display: inline-block !important;
+  object-fit: contain !important;
+  vertical-align: middle !important;
+  flex: 0 0 auto !important;
+}
+
+/* prevent top-level panels from clipping contents unexpectedly */
+#inputArea,
+#summary,
+#totalStats,
+#recentStats,
+#chartContainer,
+.section,
+.field,
+.deck,
+.bo1-card {
+  box-sizing: border-box !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 560px) {
+  .class-button,
+  #classButtons button,
+  #class-buttons button,
+  .class-buttons button {
+    width: 72px !important;
+    height: 64px !important;
+    min-width: 72px !important;
+    min-height: 64px !important;
+    max-width: 72px !important;
+    max-height: 64px !important;
+    padding: 7px !important;
+  }
+  .class-button img,
+  .class-button svg,
+  #classButtons button img,
+  #classButtons button svg,
+  #class-buttons button img,
+  #class-buttons button svg,
+  .class-buttons button img,
+  .class-buttons button svg,
+  #classButtons .class-icon,
+  #class-buttons .class-icon,
+  .class-buttons .class-icon {
+    width: 46px !important;
+    height: 46px !important;
+    max-width: 46px !important;
+    max-height: 46px !important;
+  }
+}

@@ -1,8 +1,8 @@
 [
   {
-    "id": "others",
-    "title": "その他",
-    "image": "environments/others.png"
+    "id": "pack_008",
+    "title": "Chronicle of Destiny",
+    "image": "environments/pack_008.png"
   },
   {
     "id": "pack_007",
@@ -10,8 +10,8 @@
     "image": "environments/pack_007.png"
   },
   {
-    "id": "pack_008",
-    "title": "Chronicle of Destiny",
-    "image": "environments/pack_008.png"
+    "id": "others",
+    "title": "その他",
+    "image": "environments/others.png"
   }
 ]

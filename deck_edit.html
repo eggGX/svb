@@ -159,8 +159,9 @@ img.icon {
 
   <script>
     const allData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const currentEnvironmentId = allData.currentEnvironmentId;
     const editDeckId = localStorage.getItem('editDeckId');
-    const deck = allData.decks?.find(d => d.id === editDeckId);
+    const deck = allData.decks?.find(d => d.id === editDeckId && d.environmentId === currentEnvironmentId);
 
     if (!deck) {
       alert('編集対象のデッキが見つかりません。');

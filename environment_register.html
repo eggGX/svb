@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>環境登録</title>
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+<body>
+  <h1>環境登録</h1>
+  <p class="hint">この画面は環境を事前登録するための画面です。アプリ本体への遷移ボタンは置いていません。</p>
+
+  <div class="field">
+    <h3>環境タイトル</h3>
+    <input type="text" id="environmentTitle" placeholder="例: 第1弾環境 / 2026年6月環境" />
+
+    <h3>環境画像</h3>
+    <input type="file" id="environmentImageFile" accept="image/*" />
+
+    <div id="pasteArea" class="image-paste-area" tabindex="0">
+      ここに画像を貼り付けできます<br>
+      <span>Ctrl + V / 右クリック貼り付け に対応</span>
+    </div>
+
+    <div id="cropPanel" class="environment-crop-panel" style="display:none;">
+      <p class="hint">画像をドラッグして位置調整できます。下のバーで拡大・縮小できます。</p>
+      <canvas id="cropCanvas" width="640" height="360"></canvas>
+      <label class="crop-zoom-label">
+        拡大率
+        <input type="range" id="cropZoom" min="0.5" max="3" step="0.01" value="1" />
+      </label>
+    </div>
+  </div>
+
+  <button id="registerEnvironmentButton" type="button">環境を登録</button>
+
+  <h2>登録済み環境</h2>
+  <div id="registeredEnvironmentList" class="environment-grid"></div>
+
+  <script src="js/environment_loader.js"></script>
+  <script>
+    let selectedImageData = '';
+    let cropImage = null;
+    let cropState = {
+      zoom: 1,
+      offsetX: 0,
+      offsetY: 0,
+      dragging: false,
+      lastX: 0,
+      lastY: 0,
+      baseScale: 1
+    };
+
+    function getData() {
+      return window.EnvironmentLoader ? EnvironmentLoader.readData() : JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    }
+
+    function saveData(data) {
+      if (window.EnvironmentLoader) {
+        EnvironmentLoader.writeData(data);
+      } else {
+        localStorage.setItem('shadowverseData', JSON.stringify(data));
+      }
+    }
+
+    function setupEvents() {
+      const fileInput = document.getElementById('environmentImageFile');
+      const pasteArea = document.getElementById('pasteArea');
+      const registerButton = document.getElementById('registerEnvironmentButton');
+      const zoom = document.getElementById('cropZoom');
+      const canvas = document.getElementById('cropCanvas');
+
+      fileInput.addEventListener('change', handleImageFile);
+      registerButton.addEventListener('click', registerEnvironment);
+
+      pasteArea.addEventListener('click', () => pasteArea.focus());
+      pasteArea.addEventListener('paste', handlePasteImage);
+      document.addEventListener('paste', handlePasteImage);
+
+      zoom.addEventListener('input', () => {
+        cropState.zoom = Number(zoom.value);
+        drawCropCanvas();
+      });
+
+      canvas.addEventListener('mousedown', startDrag);
+      canvas.addEventListener('mousemove', dragImage);
+      canvas.addEventListener('mouseup', endDrag);
+      canvas.addEventListener('mouseleave', endDrag);
+      canvas.addEventListener('touchstart', startDrag, { passive: false });
+      canvas.addEventListener('touchmove', dragImage, { passive: false });
+      canvas.addEventListener('touchend', endDrag);
+    }
+
+    function handleImageFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      loadImageFile(file);
+    }
+
+    function handlePasteImage(event) {
+      const items = event.clipboardData?.items || [];
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          event.preventDefault();
+          const file = item.getAsFile();
+          loadImageFile(file);
+          return;
+        }
+      }
+    }
+
+    function loadImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        alert('画像ファイルを選択してください');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = e => loadImageData(e.target.result);
+      reader.readAsDataURL(file);
+    }
+
+    function loadImageData(dataUrl) {
+      const img = new Image();
+      img.onload = () => {
+        cropImage = img;
+        selectedImageData = dataUrl;
+        document.getElementById('cropPanel').style.display = 'block';
+        document.getElementById('cropZoom').value = '1';
+        cropState.zoom = 1;
+        resetCropPosition();
+        drawCropCanvas();
+        selectedImageData = getCroppedImageData();
+      };
+      img.src = dataUrl;
+    }
+
+    function resetCropPosition() {
+      const canvas = document.getElementById('cropCanvas');
+      const scaleX = canvas.width / cropImage.width;
+      const scaleY = canvas.height / cropImage.height;
+      cropState.baseScale = Math.max(scaleX, scaleY);
+      const drawW = cropImage.width * cropState.baseScale;
+      const drawH = cropImage.height * cropState.baseScale;
+      cropState.offsetX = (canvas.width - drawW) / 2;
+      cropState.offsetY = (canvas.height - drawH) / 2;
+    }
+
+    function drawCropCanvas() {
+      if (!cropImage) return;
+      const canvas = document.getElementById('cropCanvas');
+      const ctx = canvas.getContext('2d');
+      const scale = cropState.baseScale * cropState.zoom;
+      const drawW = cropImage.width * scale;
+      const drawH = cropImage.height * scale;
+
+      clampCropPosition(drawW, drawH);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(cropImage, cropState.offsetX, cropState.offsetY, drawW, drawH);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(1.5, 1.5, canvas.width - 3, canvas.height - 3);
+    }
+
+    function clampCropPosition(drawW, drawH) {
+      const canvas = document.getElementById('cropCanvas');
+      if (drawW <= canvas.width) {
+        cropState.offsetX = (canvas.width - drawW) / 2;
+      } else {
+        cropState.offsetX = Math.min(0, Math.max(canvas.width - drawW, cropState.offsetX));
+      }
+      if (drawH <= canvas.height) {
+        cropState.offsetY = (canvas.height - drawH) / 2;
+      } else {
+        cropState.offsetY = Math.min(0, Math.max(canvas.height - drawH, cropState.offsetY));
+      }
+    }
+
+    function getPointerPosition(event) {
+      const canvas = document.getElementById('cropCanvas');
+      const rect = canvas.getBoundingClientRect();
+      const point = event.touches ? event.touches[0] : event;
+      return {
+        x: (point.clientX - rect.left) * (canvas.width / rect.width),
+        y: (point.clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function startDrag(event) {
+      if (!cropImage) return;
+      event.preventDefault();
+      const pos = getPointerPosition(event);
+      cropState.dragging = true;
+      cropState.lastX = pos.x;
+      cropState.lastY = pos.y;
+    }
+
+    function dragImage(event) {
+      if (!cropState.dragging || !cropImage) return;
+      event.preventDefault();
+      const pos = getPointerPosition(event);
+      cropState.offsetX += pos.x - cropState.lastX;
+      cropState.offsetY += pos.y - cropState.lastY;
+      cropState.lastX = pos.x;
+      cropState.lastY = pos.y;
+      drawCropCanvas();
+    }
+
+    function endDrag() {
+      if (!cropState.dragging) return;
+      cropState.dragging = false;
+      updateFinalPreview();
+    }
+
+    function getCroppedImageData() {
+      if (!cropImage) return selectedImageData;
+      drawCropCanvas();
+      const canvas = document.getElementById('cropCanvas');
+      return canvas.toDataURL('image/jpeg', 0.9);
+    }
+
+    function updateFinalPreview() {
+      selectedImageData = getCroppedImageData();
+    }
+
+    function registerEnvironment() {
+      updateFinalPreview();
+      const title = document.getElementById('environmentTitle').value.trim();
+      const image = selectedImageData;
+
+      if (!title) {
+        alert('環境タイトルを入力してください');
+        return;
+      }
+      if (!image) {
+        alert('環境画像を選択、または貼り付けしてください');
+        return;
+      }
+
+      const data = getData();
+      if (!data.environments) data.environments = [];
+      const id = 'env-' + Date.now();
+      data.environments.push({ id, title, image, createdAt: new Date().toISOString() });
+      saveData(data);
+
+      document.getElementById('environmentTitle').value = '';
+      document.getElementById('environmentImageFile').value = '';
+      document.getElementById('cropPanel').style.display = 'none';
+      selectedImageData = '';
+      cropImage = null;
+      renderList();
+      alert('環境を登録しました');
+    }
+
+    function deleteEnvironment(id) {
+      if (!confirm('この環境を削除しますか？この環境のデッキ・BO1データも削除されます。')) return;
+      const data = getData();
+      const target = (data.environments || []).find(env => env.id === id);
+      if (target && target.source === 'file') {
+        alert('フォルダ内の environments/environments.json で管理している環境は、この画面から削除できません。削除したい場合はJSONから消してください。');
+        return;
+      }
+      data.environments = (data.environments || []).filter(env => env.id !== id);
+      data.decks = (data.decks || []).filter(deck => deck.environmentId !== id);
+      data.bo1Decks = (data.bo1Decks || []).filter(bo1 => bo1.environmentId !== id);
+      if (data.currentEnvironmentId === id) delete data.currentEnvironmentId;
+      if ((data.decks || []).every(deck => deck.id !== data.selectedDeckId)) delete data.selectedDeckId;
+      saveData(data);
+      renderList();
+    }
+
+    function renderList() {
+      const data = getData();
+      const list = document.getElementById('registeredEnvironmentList');
+      const environments = data.environments || [];
+      if (!environments.length) {
+        list.innerHTML = '<p>登録済み環境はありません。</p>';
+        return;
+      }
+      list.innerHTML = '';
+      environments.forEach(env => {
+        const card = document.createElement('div');
+        card.className = 'environment-card';
+        card.innerHTML = `
+          <div class="environment-thumb">
+            ${env.image ? `<img src="${env.image}" alt="${escapeHtml(env.title)}">` : '<div class="no-image">NO IMAGE</div>'}
+          </div>
+          <h3>${escapeHtml(env.title)}</h3>
+          ${env.source === 'file' ? '<p class="hint">フォルダ内JSONから読込</p>' : `<button class="danger" type="button" onclick="deleteEnvironment('${env.id}')">削除</button>`}
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>'"]/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[ch]));
+    }
+
+    setupEvents();
+    if (window.EnvironmentLoader) {
+      EnvironmentLoader.ensureFileEnvironments().then(renderList);
+    } else {
+      renderList();
+    }
+  </script>
+</body>
+</html>

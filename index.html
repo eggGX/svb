@@ -145,7 +145,7 @@ img.icon {
   <h1>Shadowverse 戦績管理</h1>
 
   <div id="topButtons">
-    <button onclick="location.href='deck_select.html'">スタート</button>
+    <button onclick="location.href='environment_select.html'">スタート</button>
 
     <!-- エクスポート（インポートの左） -->
     <button onclick="exportAll()">エクスポート</button>
@@ -158,7 +158,10 @@ img.icon {
     <button class="clear-button" onclick="clearData()">データをクリア</button>
   </div>
 
+  <script src="js/environment_loader.js"></script>
   <script>
+    if (window.EnvironmentLoader) EnvironmentLoader.ensureFileEnvironments();
+
     // エクスポート：localStorageの全データ（shadowverseData）を書き出し
     function exportAll() {
       const raw = localStorage.getItem('shadowverseData') || '{}';
@@ -198,6 +201,10 @@ img.icon {
             alert('正しいデータ形式ではありません。');
             return;
           }
+          if (importedData.environments && !Array.isArray(importedData.environments)) {
+            alert('環境情報の形式が正しくありません。');
+            return;
+          }
           if (importedData.decks && !Array.isArray(importedData.decks)) {
             alert('デッキ情報の形式が正しくありません。');
             return;
@@ -217,10 +224,23 @@ img.icon {
     }
 
     // クリア
+    // Ver2.7.4: 環境情報は残し、デッキ・戦績などプレイデータだけを削除する
     function clearData() {
-      if (confirm('ローカルストレージのデータを全てクリアします。よろしいですか？')) {
-        localStorage.removeItem('shadowverseData');
-        alert('データをクリアしました。ページを再読み込みします。');
+      if (confirm('環境情報は残したまま、デッキデータと戦績データを全てクリアします。よろしいですか？')) {
+        let currentData = {};
+        try {
+          currentData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+        } catch (e) {
+          currentData = {};
+        }
+
+        const environments = Array.isArray(currentData.environments) ? currentData.environments : [];
+        const clearedData = {
+          environments: environments
+        };
+
+        localStorage.setItem('shadowverseData', JSON.stringify(clearedData));
+        alert('デッキデータと戦績データをクリアしました。環境情報は残しています。ページを再読み込みします。');
         location.reload();
       }
     }

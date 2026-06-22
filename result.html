@@ -151,11 +151,12 @@ img.icon {
 
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const currentEnvironmentId = data.currentEnvironmentId;
     const selectedDeckId = data.selectedDeckId;
     let selectedDeck = null;
 
     if (data.decks && selectedDeckId) {
-      selectedDeck = data.decks.find(d => d.id === selectedDeckId);
+      selectedDeck = data.decks.find(d => d.id === selectedDeckId && d.environmentId === currentEnvironmentId);
     }
 
     function goToBattle() {

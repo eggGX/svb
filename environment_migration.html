@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>既存データの環境移行</title>
+  <link rel="stylesheet" href="style/style.css" />
+</head>
+<body>
+  <h1>既存データの環境移行</h1>
+  <p class="hint">
+    環境IDが付いていない古いデッキ・BO1データを、選択した環境にまとめて割り当てます。<br>
+    すでに環境IDが付いているデータは変更しません。
+  </p>
+
+  <div id="migrationSummary" class="migration-summary"></div>
+
+  <h2>移行先の環境を選択</h2>
+  <div id="environmentList" class="environment-list"></div>
+
+  <div class="new-deck">
+    <button onclick="location.href='environment_select.html'">環境選択へ戻る</button>
+    <button onclick="location.href='index.html'">TOPへ戻る</button>
+  </div>
+
+  <script src="js/environment_loader.js"></script>
+  <script>
+    let latestData = {};
+
+    init();
+
+    async function init() {
+      latestData = await EnvironmentLoader.ensureFileEnvironments();
+      renderSummary(latestData);
+      renderEnvironments(latestData);
+    }
+
+    function getUnassignedCounts(data) {
+      const decks = Array.isArray(data.decks) ? data.decks : [];
+      const bo1Decks = Array.isArray(data.bo1Decks) ? data.bo1Decks : [];
+      return {
+        decks: decks.filter(deck => !deck.environmentId).length,
+        bo1Decks: bo1Decks.filter(bo1 => !bo1.environmentId).length
+      };
+    }
+
+    function renderSummary(data) {
+      const counts = getUnassignedCounts(data);
+      const summary = document.getElementById('migrationSummary');
+      if (counts.decks === 0 && counts.bo1Decks === 0) {
+        summary.innerHTML = `
+          <strong>移行が必要な既存データはありません。</strong>
+          <p>環境ID未設定のデッキ・BO1データは見つかりませんでした。</p>
+        `;
+        return;
+      }
+      summary.innerHTML = `
+        <strong>移行対象</strong>
+        <p>デッキ：${counts.decks}件</p>
+        <p>BO1データ：${counts.bo1Decks}件</p>
+      `;
+    }
+
+    function renderEnvironments(data) {
+      const container = document.getElementById('environmentList');
+      const environments = data.environments || [];
+      const counts = getUnassignedCounts(data);
+      container.innerHTML = '';
+
+      if (environments.length === 0) {
+        container.innerHTML = '<p>登録された環境がありません。先に environment_register.html から環境を登録してください。</p>';
+        return;
+      }
+
+      environments.forEach(env => {
+        const card = document.createElement('div');
+        card.className = 'deck environment-select-card';
+        const disabled = counts.decks === 0 && counts.bo1Decks === 0;
+        card.innerHTML = `
+          <button class="environment-image-button" type="button" ${disabled ? 'disabled' : ''} onclick="migrateToEnvironment('${escapeJs(env.id)}')" aria-label="${escapeHtml(env.title)}へ移行">
+            ${env.image ? `<img src="${escapeAttr(env.image)}" alt="${escapeHtml(env.title)}">` : '<span class="no-image">NO IMAGE</span>'}
+          </button>
+          <h3 class="deck-title environment-title-only">${escapeHtml(env.title)}</h3>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function migrateToEnvironment(environmentId) {
+      const data = EnvironmentLoader.readData();
+      const env = (data.environments || []).find(e => e.id === environmentId);
+      if (!env) {
+        alert('移行先の環境が見つかりません。');
+        return;
+      }
+
+      const counts = getUnassignedCounts(data);
+      if (counts.decks === 0 && counts.bo1Decks === 0) {
+        alert('移行対象の既存データはありません。');
+        return;
+      }
+
+      const message = `環境ID未設定の既存データを「${env.title}」に移行します。\n\nデッキ：${counts.decks}件\nBO1データ：${counts.bo1Decks}件\n\n実行してよろしいですか？`;
+      if (!confirm(message)) return;
+
+      data.decks = (data.decks || []).map(deck => {
+        if (!deck.environmentId) return { ...deck, environmentId };
+        return deck;
+      });
+
+      data.bo1Decks = (data.bo1Decks || []).map(bo1 => {
+        if (!bo1.environmentId) return { ...bo1, environmentId };
+        return bo1;
+      });
+
+      data.currentEnvironmentId = environmentId;
+      delete data.selectedDeckId;
+      EnvironmentLoader.writeData(data);
+
+      alert('既存データを移行しました。');
+      location.href = 'deck_select.html';
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>'"]/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      }[ch]));
+    }
+    function escapeAttr(value) {
+      return escapeHtml(value).replace(/`/g, '&#96;');
+    }
+    function escapeJs(value) {
+      return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+  </script>
+</body>
+</html>

@@ -179,7 +179,12 @@ img.icon {
 
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-    const decks = data.decks || [];
+    const currentEnvironmentId = data.currentEnvironmentId;
+    if (!currentEnvironmentId) {
+      alert('環境が選択されていません。環境選択画面に戻ります。');
+      location.href = 'environment_select.html';
+    }
+    const decks = (data.decks || []).filter(deck => deck.environmentId === currentEnvironmentId);
 
     const deck1Select = document.getElementById('deck1Select');
     const deck2Select = document.getElementById('deck2Select');
@@ -257,6 +262,7 @@ img.icon {
 
       const newBo1 = {
         id: 'bo1_' + Date.now(),
+        environmentId: currentEnvironmentId,
         deck1Id: deck1Select.value,
         deck2Id: deck2Select.value,
         records: []

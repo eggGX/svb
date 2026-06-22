@@ -132,8 +132,10 @@ img.icon {
 </head>
 <body>
   <h1>デッキ選択</h1>
+  <div id="currentEnvironmentLabel" class="current-environment-label"></div>
 
   <div class="top-right-actions">
+    <button onclick="location.href='environment_select.html'">環境選択へ戻る</button>
     <button class="bo1-link" onclick="location.href='bo1_list.html'">2デッキBo1はこちら</button>
   </div>
 
@@ -154,7 +156,17 @@ img.icon {
 
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-    const decks = data.decks || [];
+    const currentEnvironmentId = data.currentEnvironmentId;
+    const currentEnvironment = (data.environments || []).find(env => env.id === currentEnvironmentId);
+
+    if (!currentEnvironmentId || !currentEnvironment) {
+      alert('環境が選択されていません。環境選択画面に戻ります。');
+      location.href = 'environment_select.html';
+    }
+
+    document.getElementById('currentEnvironmentLabel').textContent = `選択中の環境：${currentEnvironment.title}`;
+
+    const decks = (data.decks || []).filter(deck => deck.environmentId === currentEnvironmentId);
     const container = document.getElementById('deckList');
 
     if (decks.length === 0) {
@@ -195,6 +207,7 @@ img.icon {
 
     function selectDeck(id) {
       const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+      data.currentEnvironmentId = currentEnvironmentId;
       data.selectedDeckId = id;
       localStorage.setItem('shadowverseData', JSON.stringify(data));
       location.href = 'battle.html';
@@ -226,7 +239,8 @@ img.icon {
       if (!confirm('このデッキを削除してもよろしいですか？')) return;
 
       const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      data.decks = data.decks.filter(d => d.id !== id);
+      data.decks = (data.decks || []).filter(d => d.id !== id);
+      data.bo1Decks = (data.bo1Decks || []).filter(b => b.deck1Id !== id && b.deck2Id !== id);
 
       if (data.selectedDeckId === id) {
         delete data.selectedDeckId;

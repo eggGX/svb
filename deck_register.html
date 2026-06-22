@@ -159,6 +159,15 @@ img.icon {
   <button onclick="goToSelect()">デッキ選択へ</button>
 
   <script>
+    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const currentEnvironmentId = data.currentEnvironmentId;
+    const currentEnvironment = (data.environments || []).find(env => env.id === currentEnvironmentId);
+
+    if (!currentEnvironmentId || !currentEnvironment) {
+      alert('環境が選択されていません。環境選択画面に戻ります。');
+      location.href = 'environment_select.html';
+    }
+
     const classIcons = {
       'エルフ': 'images/elf.svg',
       'ロイヤル': 'images/royal.svg',
@@ -208,7 +217,7 @@ img.icon {
       if (!data.decks) data.decks = [];
 
       const id = 'deck-' + Date.now();
-      data.decks.push({ id, class: selectedClass, name, url, memo, records: [] });
+      data.decks.push({ id, environmentId: currentEnvironmentId, class: selectedClass, name, url, memo, records: [] });
 
       data.selectedDeckId = id;
       localStorage.setItem('shadowverseData', JSON.stringify(data));

@@ -190,9 +190,10 @@ img.icon {
   <script>
     // ===== データ取得 =====
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-    const decks = data.decks || [];
+    const currentEnvironmentId = data.currentEnvironmentId;
+    const decks = (data.decks || []).filter(deck => deck.environmentId === currentEnvironmentId);
     const bo1Id = localStorage.getItem('selectedBo1Id');
-    const bo1 = (data.bo1Decks || []).find(b => b.id === bo1Id);
+    const bo1 = (data.bo1Decks || []).find(b => b.id === bo1Id && b.environmentId === currentEnvironmentId);
 
     if (!bo1) {
       alert('対象のデータが見つかりません');

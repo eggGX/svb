@@ -253,6 +253,7 @@ img.icon {
 
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const currentEnvironmentId = data.currentEnvironmentId;
     const selectedDeckId = data.selectedDeckId;
     let selectedDeck = null;
     let selectedOpponentClass = '';
@@ -260,7 +261,7 @@ img.icon {
     let selectedWin = null;
 
     if (data.decks && selectedDeckId) {
-      selectedDeck = data.decks.find(d => d.id === selectedDeckId);
+      selectedDeck = data.decks.find(d => d.id === selectedDeckId && d.environmentId === currentEnvironmentId);
     }
 
     if (!selectedDeck) {
@@ -333,8 +334,10 @@ img.icon {
       });
 
       const allData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      allData.decks = allData.decks.filter(d => d.id !== selectedDeckId);
+      allData.decks = (allData.decks || []).filter(d => d.id !== selectedDeckId);
+      selectedDeck.environmentId = currentEnvironmentId;
       allData.decks.push(selectedDeck);
+      allData.currentEnvironmentId = currentEnvironmentId;
       allData.selectedDeckId = selectedDeckId;
       localStorage.setItem('shadowverseData', JSON.stringify(allData));
 
@@ -350,7 +353,7 @@ img.icon {
 
     function updateChart() {
       const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      const deck = data.decks?.find(d => d.id === data.selectedDeckId);
+      const deck = data.decks?.find(d => d.id === data.selectedDeckId && d.environmentId === data.currentEnvironmentId);
       const counts = {};
       opponentClasses.forEach(cls => counts[cls] = 0);
 
@@ -417,7 +420,7 @@ img.icon {
 
     function updateRecentStats() {
       const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      const deck = data.decks?.find(d => d.id === data.selectedDeckId);
+      const deck = data.decks?.find(d => d.id === data.selectedDeckId && d.environmentId === data.currentEnvironmentId);
       const records = deck?.records || [];
       const todayRecords = records.filter(isTodayRecord);
       const recent10Records = records.slice(-10).reverse();

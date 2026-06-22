@@ -4,7 +4,59 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>環境選択</title>
-  <link rel="stylesheet" href="style/style.css" />
+  <link rel="stylesheet" href="style/style.css?v=2.7.7" />
+
+  <style>
+    /* Ver2.7.7: 環境選択カードのサイズ固定 */
+    #environmentList.environment-list {
+      width: min(1100px, calc(100% - 24px));
+      margin: 22px auto;
+      display: grid !important;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      padding: 0 !important;
+    }
+    .environment-select-card {
+      min-width: 0;
+      padding: 10px;
+      border: 1px solid rgba(233,199,106,.45);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(22,29,72,.88), rgba(8,12,30,.88));
+      box-shadow: 0 0 18px rgba(233,199,106,.18), 0 14px 30px rgba(0,0,0,.35);
+      box-sizing: border-box;
+    }
+    .environment-image-button {
+      width: 100% !important;
+      aspect-ratio: 16 / 9;
+      height: auto !important;
+      min-height: 0 !important;
+      display: block !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+      box-sizing: border-box;
+    }
+    .environment-image-button img {
+      width: 100% !important;
+      height: 100% !important;
+      max-width: none !important;
+      max-height: none !important;
+      object-fit: cover !important;
+      display: block !important;
+    }
+    @media (max-width: 1024px) {
+      #environmentList.environment-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      #environmentList.environment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .environment-select-card { padding: 8px; }
+    }
+  </style>
 </head>
 <body>
   <h1>環境選択</h1>
@@ -43,7 +95,7 @@
 
       environments.forEach(env => {
         const card = document.createElement('div');
-        card.className = 'deck environment-select-card';
+        card.className = 'environment-select-card';
         card.innerHTML = `
           <button class="environment-image-button" type="button" onclick="selectEnvironment('${escapeJs(env.id)}')" aria-label="${escapeHtml(env.title)}でスタート">
             ${env.image ? `<img src="${escapeAttr(env.image)}" alt="${escapeHtml(env.title)}">` : '<span class="no-image">NO IMAGE</span>'}

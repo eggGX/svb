@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#14244f"/>
+      <stop offset="0.5" stop-color="#253f9a"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+    <radialGradient id="r" cx="50%" cy="35%" r="60%">
+      <stop offset="0" stop-color="#9ae6ff" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#g)"/>
+  <rect width="1600" height="900" fill="url(#r)"/>
+  <g fill="none" stroke="#bde9ff" stroke-opacity="0.35">
+    <path d="M0 650 C300 520 520 820 820 650 S1280 470 1600 640" stroke-width="7"/>
+    <path d="M0 730 C350 610 520 850 820 720 S1220 560 1600 720" stroke-width="4"/>
+  </g>
+  <g fill="#fff" opacity="0.75">
+    <circle cx="240" cy="160" r="5"/><circle cx="410" cy="240" r="3"/><circle cx="720" cy="120" r="4"/><circle cx="1090" cy="220" r="5"/><circle cx="1320" cy="135" r="3"/>
+  </g>
+  <text x="800" y="455" text-anchor="middle" font-family="Arial, sans-serif" font-size="96" font-weight="700" fill="#ffffff" opacity="0.92">DEFAULT ENV</text>
+</svg>

@@ -899,3 +899,251 @@ img.icon {
     max-height: 46px !important;
   }
 }
+
+/* =========================================================
+   Ver2.7: environment selection / environment registration
+========================================================= */
+.environment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  width: min(980px, 100%);
+  margin: 22px auto;
+}
+
+.environment-card {
+  background: rgba(10, 16, 34, 0.86);
+  border: 1px solid rgba(120, 190, 255, 0.45);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 0 18px rgba(80, 160, 255, 0.25);
+  text-align: center;
+}
+
+.environment-card h3 {
+  margin: 12px 0;
+  word-break: break-word;
+}
+
+.environment-thumb {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.environment-thumb img,
+.environment-register-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.environment-register-preview {
+  width: min(520px, 100%);
+  aspect-ratio: 16 / 9;
+  margin-top: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.no-image {
+  opacity: 0.65;
+  letter-spacing: 0.08em;
+}
+
+.hint {
+  opacity: 0.82;
+}
+
+.current-environment-label {
+  margin: 0 auto 18px;
+  padding: 10px 14px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(120, 190, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(10, 16, 34, 0.72);
+}
+
+/* Ver2.7.1: environment image paste / crop */
+.image-paste-area {
+  margin-top: 12px;
+  padding: 18px;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  text-align: center;
+  cursor: text;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.image-paste-area:focus {
+  outline: 2px solid rgba(120, 180, 255, 0.9);
+}
+
+.image-paste-area span {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.environment-crop-panel {
+  margin-top: 16px;
+}
+
+.environment-crop-panel canvas {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  display: block;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  cursor: grab;
+  background: #111827;
+}
+
+.environment-crop-panel canvas:active {
+  cursor: grabbing;
+}
+
+.crop-zoom-label {
+  display: block;
+  margin-top: 12px;
+}
+
+.crop-zoom-label input {
+  width: 100%;
+  max-width: 640px;
+  display: block;
+  margin-top: 6px;
+}
+
+
+/* =========================================================
+   Ver2.7.3: environment selection grid
+   - PC: 4 columns
+   - Tablet: 3 columns
+   - Smartphone: 2 columns
+========================================================= */
+.environment-list {
+  width: min(1100px, 100%);
+  margin: 22px auto;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.environment-select-card {
+  text-align: left;
+  padding: 10px;
+}
+
+.environment-title-only {
+  display: block;
+  text-align: center;
+  margin-top: 9px !important;
+  margin-bottom: 0 !important;
+  font-size: 15px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.environment-image-button {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
+  padding: 0;
+  border: 1px solid rgba(120, 190, 255, 0.45);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(80, 160, 255, 0.18);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.environment-image-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(160, 220, 255, 0.85);
+  box-shadow: 0 0 20px rgba(120, 190, 255, 0.38);
+}
+
+.environment-image-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 1024px) {
+  .environment-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .environment-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .environment-select-card {
+    padding: 8px;
+  }
+
+  .environment-title-only {
+    font-size: 13px;
+  }
+}
+
+.environment-crop-panel canvas {
+  max-width: 640px;
+}
+
+@media (max-width: 560px) {
+  .top-right-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* =========================================================
+   Ver2.7.5: existing data migration / file based environments
+========================================================= */
+.migration-notice,
+.migration-summary {
+  width: min(760px, 100%);
+  margin: 16px auto 22px;
+  padding: 16px;
+  border: 1px solid rgba(255, 220, 120, 0.55);
+  border-radius: 16px;
+  background: rgba(40, 28, 8, 0.72);
+  box-shadow: 0 0 18px rgba(255, 190, 90, 0.18);
+  box-sizing: border-box;
+}
+
+.migration-notice strong,
+.migration-summary strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #ffe4a3;
+}
+
+.migration-notice span {
+  display: block;
+  margin-bottom: 12px;
+  opacity: 0.9;
+}
+
+.environment-image-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none !important;
+  box-shadow: none !important;
+}

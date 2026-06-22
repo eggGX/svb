@@ -1147,3 +1147,56 @@ img.icon {
   transform: none !important;
   box-shadow: none !important;
 }
+
+
+/* =========================================================
+   Ver2.7.7: environment image size unification
+========================================================= */
+#environmentList.environment-list {
+  width: min(1100px, calc(100% - 24px));
+  margin: 22px auto;
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+}
+.environment-select-card {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(233,199,106,.45);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(22,29,72,.88), rgba(8,12,30,.88));
+  box-shadow: 0 0 18px rgba(233,199,106,.18), 0 14px 30px rgba(0,0,0,.35);
+  box-sizing: border-box;
+}
+.environment-image-button {
+  width: 100% !important;
+  aspect-ratio: 16 / 9;
+  height: auto !important;
+  min-height: 0 !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-sizing: border-box;
+}
+.environment-image-button img {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+@media (max-width: 1024px) {
+  #environmentList.environment-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  #environmentList.environment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .environment-select-card { padding: 8px; }
+}

@@ -75,7 +75,9 @@
 
     async function init() {
       const data = await EnvironmentLoader.ensureFileEnvironments();
-      const environments = data.environments || [];
+      // 最新環境を左上に表示するため、登録順/JSON記述順を逆順にして表示します。
+      // environments.json は「古い → 新しい」の順に書けば、画面では「新しい → 古い」になります。
+      const environments = (data.environments || []).slice().reverse();
       const container = document.getElementById('environmentList');
       const migrationNotice = document.getElementById('migrationNotice');
 

@@ -1,216 +1,225 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>デッキ編集</title>
   <link rel="stylesheet" href="style/style.css" />
-<style>
-
-/* =========================================================
-   Ver2.6 fix: class icon layout normalization
-   - all class buttons are centered
-   - SVGs never overflow their frames
-   - button groups wrap inside panels instead of spilling out
-========================================================= */
-.class-button-group,
-#classButtons,
-#class-buttons,
-.class-buttons {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 14px !important;
-  margin: 10px 0 22px !important;
-  overflow: visible !important;
-}
-
-.class-button,
-#classButtons button,
-#class-buttons button,
-.class-buttons button {
-  width: 88px !important;
-  height: 74px !important;
-  min-width: 88px !important;
-  min-height: 74px !important;
-  max-width: 88px !important;
-  max-height: 74px !important;
-  box-sizing: border-box !important;
-  padding: 8px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  vertical-align: middle !important;
-  overflow: hidden !important;
-  border-radius: 18px !important;
-  line-height: 1 !important;
-}
-
-.class-button img,
-.class-button svg,
-#classButtons button img,
-#classButtons button svg,
-#class-buttons button img,
-#class-buttons button svg,
-.class-buttons button img,
-.class-buttons button svg,
-#classButtons .class-icon,
-#class-buttons .class-icon,
-.class-buttons .class-icon {
-  width: 58px !important;
-  height: 58px !important;
-  max-width: 58px !important;
-  max-height: 58px !important;
-  display: block !important;
-  margin: auto !important;
-  object-fit: contain !important;
-  flex: 0 0 auto !important;
-  position: static !important;
-  transform: none !important;
-}
-
-/* small icons used in list/table headers */
-.class-chip,
-.icon,
-.deck-title img.icon,
-img.icon {
-  display: inline-block !important;
-  object-fit: contain !important;
-  vertical-align: middle !important;
-  flex: 0 0 auto !important;
-}
-
-/* prevent top-level panels from clipping contents unexpectedly */
-#inputArea,
-#summary,
-#totalStats,
-#recentStats,
-#chartContainer,
-.section,
-.field,
-.deck,
-.bo1-card {
-  box-sizing: border-box !important;
-  max-width: 100% !important;
-}
-
-@media (max-width: 560px) {
-  .class-button,
-  #classButtons button,
-  #class-buttons button,
-  .class-buttons button {
-    width: 72px !important;
-    height: 64px !important;
-    min-width: 72px !important;
-    min-height: 64px !important;
-    max-width: 72px !important;
-    max-height: 64px !important;
-    padding: 7px !important;
-  }
-  .class-button img,
-  .class-button svg,
-  #classButtons button img,
-  #classButtons button svg,
-  #class-buttons button img,
-  #class-buttons button svg,
-  .class-buttons button img,
-  .class-buttons button svg,
-  #classButtons .class-icon,
-  #class-buttons .class-icon,
-  .class-buttons .class-icon {
-    width: 46px !important;
-    height: 46px !important;
-    max-width: 46px !important;
-    max-height: 46px !important;
-  }
-}
-</style>
+  <style>
+    .deck-source-tabs{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px}.deck-source-tabs button.active{outline:3px solid rgba(80,190,255,.65)}
+    #urlPanel[hidden],#builderPanel[hidden]{display:none!important}
+    .builder-card{margin:14px 0;padding:16px;border:1px solid rgba(233,199,106,.45);border-radius:16px;background:linear-gradient(180deg,rgba(22,29,72,.88),rgba(8,12,30,.88));box-shadow:0 0 18px rgba(233,199,106,.12)}
+    .builder-card.ready{border-color:rgba(126,235,165,.7)}.builder-card strong{display:block;margin-bottom:8px}.builder-card .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  </style>
 </head>
-
 <body>
   <h1>デッキ編集</h1>
 
   <div>
     <h3>クラス（変更不可）</h3>
-    <p id="deckClass" style="font-weight: bold;"></p>
+    <p id="deckClass" style="font-weight:bold;"></p>
 
     <h3>デッキ名</h3>
     <input type="text" id="deckName" placeholder="例: ミッドレンジネメシス" />
 
-    <h3>デッキ画像URL</h3>
-    <div style="margin-top: 20px;">
-      <button onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">デッキ作成はこちら</button>
+    <h3>登録方法</h3>
+    <div class="deck-source-tabs">
+      <button type="button" id="urlTab">画像URLで登録</button>
+      <button type="button" id="builderTab">デッキ作成</button>
     </div>
-    <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" oninput="updateImage()" />
-    <div id="imagePreview"></div>
+
+    <section id="urlPanel">
+      <h3>デッキ画像URL</h3>
+      <div style="margin-top:20px;">
+        <button type="button" onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">公式デッキ作成はこちら</button>
+      </div>
+      <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" />
+      <div id="imagePreview"></div>
+    </section>
+
+    <section id="builderPanel" hidden>
+      <div id="builderCard" class="builder-card">
+        <strong id="builderSummary">まだデッキが作成されていません。</strong>
+        <span>カードDBの情報を使って、同一カード3枚まで・合計40枚の構成を編集できます。</span>
+        <div class="actions">
+          <button type="button" id="openBuilderButton">デッキ編集画面を開く</button>
+          <button type="button" id="clearBuilderButton">カード構成をクリア</button>
+        </div>
+      </div>
+    </section>
 
     <h3>メモ</h3>
     <textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea>
 
     <br>
-    <button onclick="saveDeck()">保存する</button>
-    <button onclick="cancelEdit()">キャンセル</button>
+    <button type="button" id="saveDeckButton">保存する</button>
+    <button type="button" id="cancelEditButton">キャンセル</button>
   </div>
 
   <script>
-    const allData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-    const currentEnvironmentId = allData.currentEnvironmentId;
-    const editDeckId = localStorage.getItem('editDeckId');
-    const deck = allData.decks?.find(d => d.id === editDeckId && d.environmentId === currentEnvironmentId);
+    const DRAFT_KEY='shadowverseDeckRegisterDraft';
+    const BUILD_KEY='shadowverseDeckBuildDraft';
+    const COMPLETE_KEY='shadowverseDeckBuildCompleted';
 
-    if (!deck) {
+    const allData=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
+    const currentEnvironmentId=allData.currentEnvironmentId;
+    const editDeckId=localStorage.getItem('editDeckId');
+    const deck=allData.decks?.find(d=>d.id===editDeckId&&d.environmentId===currentEnvironmentId);
+
+    if(!deck){
       alert('編集対象のデッキが見つかりません。');
-      location.href = 'deck_select.html';
+      location.href='deck_select.html';
     }
 
-    // 初期表示
-    document.getElementById('deckClass').textContent = deck.class;
-    document.getElementById('deckName').value = deck.name || '';
-    document.getElementById('deckUrl').value = deck.url || '';
-    document.getElementById('deckMemo').value = deck.memo || '';
+    const deckClass=document.getElementById('deckClass');
+    const deckName=document.getElementById('deckName');
+    const deckUrl=document.getElementById('deckUrl');
+    const deckMemo=document.getElementById('deckMemo');
+    const imagePreview=document.getElementById('imagePreview');
+    const urlTab=document.getElementById('urlTab');
+    const builderTab=document.getElementById('builderTab');
+    const urlPanel=document.getElementById('urlPanel');
+    const builderPanel=document.getElementById('builderPanel');
+    const builderCard=document.getElementById('builderCard');
+    const builderSummary=document.getElementById('builderSummary');
+
+    let registrationMode=deck.deckType==='builder'?'builder':'url';
+
+    deckClass.textContent=deck.class;
+    deckName.value=deck.name||'';
+    deckUrl.value=deck.url||'';
+    deckMemo.value=deck.memo||'';
+
+    restoreOrInitializeBuild();
+    restoreDraft();
+    setMode(registrationMode);
     updateImage();
+    updateBuilderSummary();
 
-    function updateImage() {
-      const url = document.getElementById('deckUrl').value.trim();
-      const container = document.getElementById('imagePreview');
-      container.innerHTML = '';
-      if (url) {
-        const img = document.createElement('img');
-        img.src = url;
-        container.appendChild(img);
+    urlTab.addEventListener('click',()=>setMode('url'));
+    builderTab.addEventListener('click',()=>{setMode('builder');openBuilder();});
+    document.getElementById('openBuilderButton').addEventListener('click',openBuilder);
+    document.getElementById('clearBuilderButton').addEventListener('click',()=>{
+      if(!confirm('カード構成をすべてクリアしますか？')) return;
+      sessionStorage.setItem(BUILD_KEY,'{}');
+      sessionStorage.removeItem(COMPLETE_KEY);
+      updateBuilderSummary();
+    });
+    deckUrl.addEventListener('input',updateImage);
+    document.getElementById('saveDeckButton').addEventListener('click',saveDeck);
+    document.getElementById('cancelEditButton').addEventListener('click',cancelEdit);
+
+    function restoreOrInitializeBuild(){
+      const draft=JSON.parse(sessionStorage.getItem(DRAFT_KEY)||'null');
+      const isSameEdit=draft&&draft.context==='edit'&&draft.deckId===deck.id;
+      if(isSameEdit) return;
+
+      sessionStorage.removeItem(DRAFT_KEY);
+      sessionStorage.removeItem(BUILD_KEY);
+      sessionStorage.removeItem(COMPLETE_KEY);
+
+      if(deck.deckType==='builder'&&Array.isArray(deck.cards)){
+        const map={};
+        deck.cards.forEach(x=>{if(x&&x.cardId&&x.count>0) map[x.cardId]=x.count;});
+        sessionStorage.setItem(BUILD_KEY,JSON.stringify(map));
+        const total=Object.values(map).reduce((s,n)=>s+n,0);
+        if(total===40) sessionStorage.setItem(COMPLETE_KEY,'1');
       }
     }
 
-    function saveDeck() {
-      const name = document.getElementById('deckName').value.trim();
-      const url = document.getElementById('deckUrl').value.trim();
-      const memo = document.getElementById('deckMemo').value.trim();
+    function restoreDraft(){
+      const draft=JSON.parse(sessionStorage.getItem(DRAFT_KEY)||'null');
+      if(!draft||draft.context!=='edit'||draft.deckId!==deck.id) return;
+      if(draft.name!=null) deckName.value=draft.name;
+      if(draft.url!=null) deckUrl.value=draft.url;
+      if(draft.memo!=null) deckMemo.value=draft.memo;
+      if(draft.mode) registrationMode=draft.mode;
+    }
 
-      if (!name) {
-        alert('デッキ名を入力してください');
-        return;
+    function setMode(mode){
+      registrationMode=mode;
+      const isUrl=mode==='url';
+      urlPanel.hidden=!isUrl;
+      builderPanel.hidden=isUrl;
+      urlTab.classList.toggle('active',isUrl);
+      builderTab.classList.toggle('active',!isUrl);
+    }
+
+    function saveDraft(){
+      sessionStorage.setItem(DRAFT_KEY,JSON.stringify({
+        context:'edit',
+        deckId:deck.id,
+        returnTo:'deck_edit.html',
+        className:deck.class,
+        name:deckName.value.trim(),
+        url:deckUrl.value.trim(),
+        memo:deckMemo.value,
+        mode:'builder'
+      }));
+    }
+
+    function openBuilder(){
+      saveDraft();
+      location.href='deck_builder.html';
+    }
+
+    function updateBuilderSummary(){
+      const selected=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
+      const total=Object.values(selected).reduce((s,n)=>s+n,0);
+      const completed=sessionStorage.getItem(COMPLETE_KEY)==='1'&&total===40;
+      builderSummary.textContent=completed?'40枚のデッキ構成です。':total?`${total} / 40枚 選択中です。`:'まだカードが選択されていません。';
+      builderCard.classList.toggle('ready',completed);
+    }
+
+    function updateImage(){
+      const url=deckUrl.value.trim();
+      imagePreview.innerHTML='';
+      if(!url) return;
+      const img=document.createElement('img');
+      img.src=url;
+      img.alt='デッキ画像プレビュー';
+      imagePreview.appendChild(img);
+    }
+
+    function saveDeck(){
+      const name=deckName.value.trim();
+      const url=deckUrl.value.trim();
+      const memo=deckMemo.value.trim();
+      if(!name){alert('デッキ名を入力してください');return;}
+
+      let cards=[];
+      if(registrationMode==='builder'){
+        const map=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
+        const total=Object.values(map).reduce((s,n)=>s+n,0);
+        if(total!==40||sessionStorage.getItem(COMPLETE_KEY)!=='1'){
+          alert('デッキ作成画面で40枚のデッキを完成させてください。');
+          return;
+        }
+        cards=Object.entries(map).map(([cardId,count])=>({cardId,count}));
       }
 
-      // 上書き
-      deck.name = name;
-      deck.url = url;
-      deck.memo = memo;
+      deck.name=name;
+      deck.memo=memo;
+      deck.deckType=registrationMode==='builder'?'builder':'image';
+      deck.url=registrationMode==='url'?url:'';
+      deck.cards=registrationMode==='builder'?cards:[];
 
-      // 保存
-      localStorage.setItem('shadowverseData', JSON.stringify(allData));
+      localStorage.setItem('shadowverseData',JSON.stringify(allData));
+      clearEditDraft();
       alert('デッキを更新しました');
-      location.href = 'deck_select.html';
+      location.href='deck_select.html';
     }
 
-    function cancelEdit() {
-      location.href = 'deck_select.html';
+    function clearEditDraft(){
+      sessionStorage.removeItem(DRAFT_KEY);
+      sessionStorage.removeItem(BUILD_KEY);
+      sessionStorage.removeItem(COMPLETE_KEY);
+    }
+
+    function cancelEdit(){
+      clearEditDraft();
+      location.href='deck_select.html';
     }
   </script>
 </body>
-
 </html>

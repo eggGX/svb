@@ -22,7 +22,8 @@
     .card-item.selected { outline:2px solid rgba(233,199,106,.9) !important; opacity:1 !important; }
     .card-item.maxed { outline:2px solid rgba(126,235,165,.9) !important; opacity:1 !important; }
     .card-item img { width:100%; height:auto; aspect-ratio:auto !important; object-fit:contain !important; display:block; border-radius:0 !important; background:#050914; }
-    .card-item .name { padding:8px 4px 2px; font-size:.82rem; line-height:1.35; min-height:2.6em; text-align:center; white-space:normal; overflow-wrap:anywhere; }
+    .card-item .name { padding:8px 4px 2px; font-size:.82rem; line-height:1.35; min-height:2.6em; text-align:center; white-space:normal; overflow-wrap:anywhere; color:#fff !important; }
+    .card-item.selected .name, .card-item.maxed .name { color:#fff !important; visibility:visible !important; opacity:1 !important; }
     .card-item .count { position:absolute !important; top:7px !important; right:7px !important; min-width:28px !important; height:28px !important; padding:0 5px !important; border-radius:4px !important; display:grid !important; place-items:center !important; visibility:visible !important; opacity:1 !important; z-index:10 !important; color:#fff !important; font-weight:800 !important; background:rgba(4,8,20,.96) !important; border:1px solid rgba(233,199,106,.9) !important; box-sizing:border-box !important; pointer-events:none !important; }
     .card-item.selected .count, .card-item.maxed .count { display:grid !important; visibility:visible !important; opacity:1 !important; color:#fff !important; }
     .selected-list { display:flex; flex-direction:column; gap:7px; }

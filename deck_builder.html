@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デッキ作成</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    body { overflow-x: hidden; }
+    .builder-shell { width: min(1500px, calc(100% - 24px)); margin: 0 auto 40px; }
+    .builder-head { display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom:16px; }
+    .builder-head .status { font-weight:700; font-size:1.15rem; }
+    .builder-layout { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:18px; align-items:start; }
+    .builder-main, .builder-side { border:1px solid rgba(233,199,106,.45); border-radius:16px; background:linear-gradient(180deg, rgba(22,29,72,.92), rgba(8,12,30,.92)); box-shadow:0 0 18px rgba(233,199,106,.12); }
+    .builder-main { padding:14px; min-width:0; }
+    .builder-side { padding:14px; position:sticky; top:12px; max-height:calc(100vh - 24px); overflow:auto; }
+    .toolbar { display:grid; grid-template-columns:2fr repeat(4, 1fr) 1.2fr; gap:10px; margin-bottom:12px; }
+    .toolbar input, .toolbar select { width:100%; box-sizing:border-box; }
+    .summary-line { display:flex; justify-content:space-between; gap:12px; align-items:center; margin:8px 0 12px; flex-wrap:wrap; }
+    .card-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; }
+    .card-item { position:relative; padding:0; overflow:hidden; border-radius:14px; background:#0b1230; border:1px solid rgba(125,180,255,.35); cursor:pointer; min-width:0; }
+    .card-item.selected { outline:2px solid rgba(233,199,106,.85); }
+    .card-item.maxed { opacity:.72; }
+    .card-item img { width:100%; aspect-ratio:0.72; object-fit:cover; display:block; }
+    .card-item .name { padding:7px 8px 9px; font-size:.85rem; line-height:1.35; min-height:2.8em; }
+    .card-item .count { position:absolute; top:7px; right:7px; min-width:30px; height:30px; border-radius:999px; display:grid; place-items:center; font-weight:800; background:rgba(8,12,30,.9); border:1px solid rgba(233,199,106,.8); }
+    .selected-list { display:flex; flex-direction:column; gap:7px; }
+    .selected-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.05); }
+    .selected-row button { min-width:36px; padding:5px 8px; }
+    .pager { display:flex; justify-content:center; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap; }
+    .pager button[disabled] { opacity:.45; cursor:default; }
+    .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .note { opacity:.8; font-size:.9rem; }
+    @media (max-width:1200px){ .card-grid{grid-template-columns:repeat(5,minmax(0,1fr));} .toolbar{grid-template-columns:repeat(3,1fr);} .toolbar input{grid-column:span 3;} }
+    @media (max-width:900px){ .builder-layout{grid-template-columns:1fr;} .builder-side{position:static; max-height:none;} .card-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
+    @media (max-width:640px){ .toolbar{grid-template-columns:1fr 1fr;} .toolbar input{grid-column:span 2;} .card-grid{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  </style>
+</head>
+<body>
+  <h1>デッキ作成</h1>
+  <div class="builder-shell">
+    <div class="builder-head">
+      <div>
+        <div id="deckLabel"></div>
+        <div class="status" id="builderStatus">0 / 40枚</div>
+      </div>
+      <div class="actions">
+        <button type="button" id="cancelBtn">戻る</button>
+        <button type="button" id="completeBtn">作成完了</button>
+      </div>
+    </div>
+
+    <div class="builder-layout">
+      <section class="builder-main">
+        <div id="loadState">カードデータを読み込み中...</div>
+        <div class="toolbar">
+          <input id="cardSearch" placeholder="カード名・能力で検索" />
+          <select id="packFilter"><option value="">全パック</option></select>
+          <select id="classFilter"><option value="">全クラス</option></select>
+          <select id="costFilter"><option value="">全コスト</option></select>
+          <select id="typeFilter"><option value="">全タイプ</option></select>
+          <select id="sortSelect">
+            <option value="costAsc">コスト昇順</option>
+            <option value="costDesc">コスト降順</option>
+            <option value="nameAsc">名前順</option>
+            <option value="packAsc">パック順</option>
+          </select>
+        </div>
+        <div class="summary-line"><span id="resultCount"></span><span class="note">左クリックで追加、右クリックで1枚減らせます。</span></div>
+        <div id="cardGrid" class="card-grid"></div>
+        <div class="pager">
+          <button type="button" id="prevPage">前へ</button>
+          <span id="pageInfo"></span>
+          <button type="button" id="nextPage">次へ</button>
+        </div>
+      </section>
+
+      <aside class="builder-side">
+        <h3>選択中のカード</h3>
+        <div id="selectedCards" class="selected-list"></div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="js/card_deck.js"></script>
+  <script>
+    const DRAFT_KEY = 'shadowverseDeckRegisterDraft';
+    const BUILD_KEY = 'shadowverseDeckBuildDraft';
+    const draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null');
+    if (!draft || !draft.className) {
+      alert('デッキ登録画面からデッキ作成を開始してください。');
+      location.href = 'deck_register.html';
+    }
+
+    let allCards = [];
+    let packNames = {};
+    let selectedCardsMap = JSON.parse(sessionStorage.getItem(BUILD_KEY) || '{}');
+    let filteredCards = [];
+    let currentPage = 1;
+    const PAGE_SIZE = 48;
+    let searchTimer = null;
+
+    const deckLabel = document.getElementById('deckLabel');
+    const builderStatus = document.getElementById('builderStatus');
+    const loadState = document.getElementById('loadState');
+    const cardSearch = document.getElementById('cardSearch');
+    const packFilter = document.getElementById('packFilter');
+    const classFilter = document.getElementById('classFilter');
+    const costFilter = document.getElementById('costFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const sortSelect = document.getElementById('sortSelect');
+    const cardGrid = document.getElementById('cardGrid');
+    const selectedCards = document.getElementById('selectedCards');
+    const resultCount = document.getElementById('resultCount');
+    const pageInfo = document.getElementById('pageInfo');
+    const prevPage = document.getElementById('prevPage');
+    const nextPage = document.getElementById('nextPage');
+
+    deckLabel.textContent = `${draft.name || '名称未設定'} / ${draft.className}`;
+
+    init();
+
+    async function init() {
+      try {
+        const loaded = await CardDeckAPI.loadCards();
+        allCards = loaded.cards || [];
+        packNames = loaded.packNames || {};
+        loadState.textContent = `${allCards.length}枚のカードを読み込みました。`;
+        populateFilters();
+        renderSelectedCards();
+        applyFilters();
+      } catch (e) {
+        console.error(e);
+        loadState.textContent = 'カードデータの読み込みに失敗しました。';
+      }
+    }
+
+    function populateFilters() {
+      Object.entries(packNames).forEach(([id,name]) => addOption(packFilter,id,name));
+      [...new Set(allCards.map(c=>c.class).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(v=>addOption(classFilter,v,v));
+      [...new Set(allCards.map(c=>Number(c.cost)).filter(Number.isFinite))].sort((a,b)=>a-b).forEach(v=>addOption(costFilter,String(v),`${v}PP`));
+      [...new Set(allCards.map(c=>c.type).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(v=>addOption(typeFilter,v,v));
+    }
+
+    function addOption(select,value,label){ const o=document.createElement('option'); o.value=value; o.textContent=label; select.appendChild(o); }
+    function totalSelected(){ return Object.values(selectedCardsMap).reduce((s,n)=>s+n,0); }
+
+    function changeCardCount(cardId,delta){
+      const current=selectedCardsMap[cardId]||0;
+      const next=current+delta;
+      if(next<0) return;
+      if(next>3){ alert('同じカードは3枚までです。'); return; }
+      if(delta>0 && totalSelected()>=40){ alert('デッキは40枚までです。'); return; }
+      if(next===0) delete selectedCardsMap[cardId]; else selectedCardsMap[cardId]=next;
+      sessionStorage.setItem(BUILD_KEY, JSON.stringify(selectedCardsMap));
+      renderSelectedCards();
+      renderPage();
+    }
+
+    function renderSelectedCards(){
+      const total=totalSelected();
+      builderStatus.textContent=`${total} / 40枚`;
+      selectedCards.innerHTML='';
+      Object.entries(selectedCardsMap).forEach(([cardId,count])=>{
+        const card=allCards.find(c=>c.id===cardId); if(!card) return;
+        const row=document.createElement('div'); row.className='selected-row';
+        const label=document.createElement('span'); label.textContent=`${card.name} ×${count}`;
+        const minus=document.createElement('button'); minus.type='button'; minus.textContent='−'; minus.addEventListener('click',()=>changeCardCount(cardId,-1));
+        row.append(label,minus); selectedCards.appendChild(row);
+      });
+      if(!selectedCards.children.length) selectedCards.innerHTML='<p class="note">まだカードが選択されていません。</p>';
+    }
+
+    function applyFilters(){
+      const keyword=cardSearch.value.trim().toLowerCase();
+      filteredCards=allCards.filter(card=>{
+        if (card.class !== draft.className && card.class !== 'ニュートラル') return false;
+        const searchable=`${card.name||''} ${card.effect||''}`.toLowerCase();
+        if(keyword && !searchable.includes(keyword)) return false;
+        if(packFilter.value && card.pack!==packFilter.value) return false;
+        if(classFilter.value && card.class!==classFilter.value) return false;
+        if(costFilter.value && String(card.cost)!==costFilter.value) return false;
+        if(typeFilter.value && card.type!==typeFilter.value) return false;
+        return true;
+      });
+      const sort=sortSelect.value;
+      filteredCards.sort((a,b)=>{
+        if(sort==='costDesc') return Number(b.cost)-Number(a.cost) || String(a.name).localeCompare(String(b.name),'ja');
+        if(sort==='nameAsc') return String(a.name).localeCompare(String(b.name),'ja');
+        if(sort==='packAsc') return String(a.packName||a.pack).localeCompare(String(b.packName||b.pack),'ja') || Number(a.cost)-Number(b.cost);
+        return Number(a.cost)-Number(b.cost) || String(a.name).localeCompare(String(b.name),'ja');
+      });
+      currentPage=1;
+      renderPage();
+    }
+
+    function renderPage(){
+      const totalPages=Math.max(1,Math.ceil(filteredCards.length/PAGE_SIZE));
+      if(currentPage>totalPages) currentPage=totalPages;
+      const start=(currentPage-1)*PAGE_SIZE;
+      const pageCards=filteredCards.slice(start,start+PAGE_SIZE);
+      cardGrid.innerHTML='';
+      pageCards.forEach(card=>{
+        const count=selectedCardsMap[card.id]||0;
+        const btn=document.createElement('button');
+        btn.type='button'; btn.className=`card-item${count?' selected':''}${count>=3?' maxed':''}`;
+        const img=document.createElement('img'); img.src=CardDeckAPI.cardImage(card); img.alt=card.name||''; img.loading='lazy'; img.decoding='async'; img.addEventListener('error',()=>img.remove());
+        const badge=document.createElement('span'); badge.className='count'; badge.textContent=count;
+        const name=document.createElement('div'); name.className='name'; name.textContent=`${card.cost}PP ${card.name}`;
+        btn.append(img,badge,name);
+        btn.addEventListener('click',()=>changeCardCount(card.id,1));
+        btn.addEventListener('contextmenu',e=>{e.preventDefault(); changeCardCount(card.id,-1);});
+        cardGrid.appendChild(btn);
+      });
+      resultCount.textContent=`${filteredCards.length}件中 ${filteredCards.length?start+1:0}〜${Math.min(start+PAGE_SIZE,filteredCards.length)}件を表示`;
+      pageInfo.textContent=`${currentPage} / ${totalPages}`;
+      prevPage.disabled=currentPage<=1;
+      nextPage.disabled=currentPage>=totalPages;
+    }
+
+    cardSearch.addEventListener('input',()=>{clearTimeout(searchTimer); searchTimer=setTimeout(applyFilters,140);});
+    [packFilter,classFilter,costFilter,typeFilter,sortSelect].forEach(el=>el.addEventListener('change',applyFilters));
+    prevPage.addEventListener('click',()=>{ if(currentPage>1){currentPage--; renderPage(); window.scrollTo({top:0,behavior:'smooth'});} });
+    nextPage.addEventListener('click',()=>{ const max=Math.max(1,Math.ceil(filteredCards.length/PAGE_SIZE)); if(currentPage<max){currentPage++; renderPage(); window.scrollTo({top:0,behavior:'smooth'});} });
+
+    document.getElementById('completeBtn').addEventListener('click',()=>{
+      if(totalSelected()!==40){ alert('カードを合計40枚選択してください。'); return; }
+      sessionStorage.setItem(BUILD_KEY, JSON.stringify(selectedCardsMap));
+      sessionStorage.setItem('shadowverseDeckBuildCompleted','1');
+      location.href='deck_register.html';
+    });
+    document.getElementById('cancelBtn').addEventListener('click',()=>location.href='deck_register.html');
+  </script>
+</body>
+</html>

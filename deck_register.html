@@ -101,10 +101,7 @@
     updateImage();
 
     urlTab.addEventListener('click',()=>setMode('url'));
-    builderTab.addEventListener('click',()=>{
-      setMode('builder');
-      openBuilder();
-    });
+    builderTab.addEventListener('click',()=>{setMode('builder');openBuilder();});
     document.getElementById('openBuilderButton').addEventListener('click',openBuilder);
     document.getElementById('clearBuilderButton').addEventListener('click',()=>{
       if(!confirm('作成中のデッキ内容をクリアしますか？')) return;
@@ -115,23 +112,13 @@
     deckUrl.addEventListener('input',updateImage);
     document.getElementById('registerDeckButton').addEventListener('click',registerDeck);
 
-    function selectClass(cls,btn){
-      selectedClass=cls;
-      [...classButtons.children].forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected');
-    }
-
-    function setMode(mode){
-      registrationMode=mode;
-      const isUrl=mode==='url';
-      urlPanel.hidden=!isUrl;
-      builderPanel.hidden=isUrl;
-      urlTab.classList.toggle('active',isUrl);
-      builderTab.classList.toggle('active',!isUrl);
-    }
+    function selectClass(cls,btn){selectedClass=cls;[...classButtons.children].forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
+    function setMode(mode){registrationMode=mode;const isUrl=mode==='url';urlPanel.hidden=!isUrl;builderPanel.hidden=isUrl;urlTab.classList.toggle('active',isUrl);builderTab.classList.toggle('active',!isUrl);}
 
     function saveDraft(){
       sessionStorage.setItem(DRAFT_KEY,JSON.stringify({
+        context:'register',
+        returnTo:'deck_register.html',
         className:selectedClass,
         name:deckName.value.trim(),
         url:deckUrl.value.trim(),
@@ -142,7 +129,7 @@
 
     function restoreDraft(){
       const draft=JSON.parse(sessionStorage.getItem(DRAFT_KEY)||'null');
-      if(!draft) return;
+      if(!draft||draft.context==='edit') return;
       if(draft.name!=null) deckName.value=draft.name;
       if(draft.url!=null) deckUrl.value=draft.url;
       if(draft.memo!=null) deckMemo.value=draft.memo;
@@ -154,11 +141,7 @@
       if(draft.mode==='builder'||sessionStorage.getItem(COMPLETE_KEY)==='1') setMode('builder');
     }
 
-    function openBuilder(){
-      if(!selectedClass){ alert('先にクラスを選択してください。'); return; }
-      saveDraft();
-      location.href='deck_builder.html';
-    }
+    function openBuilder(){if(!selectedClass){alert('先にクラスを選択してください。');return;}saveDraft();location.href='deck_builder.html';}
 
     function updateBuilderSummary(){
       const selected=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
@@ -168,51 +151,29 @@
       builderCard.classList.toggle('ready',completed);
     }
 
-    function updateImage(){
-      const url=deckUrl.value.trim(); imagePreview.innerHTML='';
-      if(!url) return;
-      const img=document.createElement('img'); img.src=url; img.alt='デッキ画像プレビュー'; imagePreview.appendChild(img);
-    }
+    function updateImage(){const url=deckUrl.value.trim();imagePreview.innerHTML='';if(!url)return;const img=document.createElement('img');img.src=url;img.alt='デッキ画像プレビュー';imagePreview.appendChild(img);}
 
     function registerDeck(){
-      const name=deckName.value.trim();
-      const url=deckUrl.value.trim();
-      const memo=deckMemo.value.trim();
-      if(!selectedClass||!name){ alert('クラスとデッキ名は必須です'); return; }
-
+      const name=deckName.value.trim();const url=deckUrl.value.trim();const memo=deckMemo.value.trim();
+      if(!selectedClass||!name){alert('クラスとデッキ名は必須です');return;}
       let cards=[];
       if(registrationMode==='builder'){
         const map=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
         const total=Object.values(map).reduce((s,n)=>s+n,0);
-        if(total!==40||sessionStorage.getItem(COMPLETE_KEY)!=='1'){
-          alert('デッキ作成画面で40枚のデッキを完成させてください。'); return;
-        }
+        if(total!==40||sessionStorage.getItem(COMPLETE_KEY)!=='1'){alert('デッキ作成画面で40枚のデッキを完成させてください。');return;}
         cards=Object.entries(map).map(([cardId,count])=>({cardId,count}));
       }
-
       const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
-      if(!data.decks) data.decks=[];
+      if(!data.decks)data.decks=[];
       const id='deck-'+Date.now();
-      data.decks.push({
-        id,
-        environmentId:currentEnvironmentId,
-        class:selectedClass,
-        name,
-        url:registrationMode==='url'?url:'',
-        memo,
-        records:[],
-        deckType:registrationMode==='builder'?'builder':'image',
-        cards
-      });
+      data.decks.push({id,environmentId:currentEnvironmentId,class:selectedClass,name,url:registrationMode==='url'?url:'',memo,records:[],deckType:registrationMode==='builder'?'builder':'image',cards});
       data.selectedDeckId=id;
       localStorage.setItem('shadowverseData',JSON.stringify(data));
-      sessionStorage.removeItem(DRAFT_KEY);
-      sessionStorage.removeItem(BUILD_KEY);
-      sessionStorage.removeItem(COMPLETE_KEY);
+      sessionStorage.removeItem(DRAFT_KEY);sessionStorage.removeItem(BUILD_KEY);sessionStorage.removeItem(COMPLETE_KEY);
       location.href='deck_select.html';
     }
 
-    function goToSelect(){ location.href='deck_select.html'; }
+    function goToSelect(){location.href='deck_select.html';}
   </script>
 </body>
 </html>

@@ -1200,3 +1200,12 @@ img.icon {
   #environmentList.environment-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .environment-select-card { padding: 8px; }
 }
+
+/* Card DB deck builder integration */
+.deck-source-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 18px}.deck-source-tabs button.active{outline:3px solid rgba(80,190,255,.65)}
+.builder-panel{margin-top:14px}.builder-toolbar{display:grid;grid-template-columns:2fr repeat(4,minmax(120px,1fr));gap:8px;margin:12px 0}.builder-toolbar input,.builder-toolbar select{width:100%;box-sizing:border-box}
+.builder-status{position:sticky;top:8px;z-index:3;padding:10px 14px;border-radius:12px;background:rgba(10,20,35,.92);font-weight:700;margin:10px 0}
+.builder-status.full{box-shadow:0 0 0 2px #62d58b inset}.card-picker-grid{display:grid;grid-template-columns:repeat(6,minmax(100px,1fr));gap:10px;max-height:58vh;overflow:auto;padding:4px}
+.card-picker{position:relative;border-radius:10px;overflow:hidden;cursor:pointer;background:#172233;border:2px solid transparent;padding:0}.card-picker img{display:block;width:100%;aspect-ratio:5/7;object-fit:cover}.card-picker .cp-name{font-size:12px;padding:6px;min-height:2.4em}.card-picker .cp-count{position:absolute;right:5px;top:5px;min-width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#111d;color:#fff;font-weight:800}.card-picker.selected{border-color:#69d39b}.card-picker.maxed{opacity:.72}.deck-selected-list{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.deck-selected-chip{display:flex;align-items:center;gap:5px;background:#172233;padding:5px 8px;border-radius:9px}.deck-selected-chip button{padding:2px 7px;margin:0}
+.built-deck-preview{display:grid;grid-template-columns:repeat(8,minmax(45px,1fr));gap:4px;width:100%;max-width:760px}.built-deck-card{position:relative;overflow:hidden;border-radius:5px}.built-deck-card img{display:block!important;width:100%!important;height:auto!important;aspect-ratio:5/7;object-fit:cover}.built-deck-card span{position:absolute;right:2px;bottom:2px;background:#000c;color:#fff;border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-weight:800;font-size:12px}.built-deck-preview.compact{grid-template-columns:repeat(6,minmax(35px,1fr));max-width:360px}
+@media(max-width:900px){.builder-toolbar{grid-template-columns:1fr 1fr}.card-picker-grid{grid-template-columns:repeat(4,1fr)}}@media(max-width:560px){.card-picker-grid{grid-template-columns:repeat(2,1fr)}.built-deck-preview{grid-template-columns:repeat(5,1fr)}}

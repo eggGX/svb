@@ -13,5 +13,10 @@
     "id": "pack_008",
     "title": "Chronicle of Destiny",
     "image": "environments/pack_008.png"
+  },
+  {
+    "id": "pack_009",
+    "title": "Revenants of Azvaldt",
+    "image": "environments/pack_009.png"
   }
 ]

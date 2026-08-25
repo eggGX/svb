@@ -1,58 +1,218 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>デッキ登録</title><link rel="stylesheet" href="style/style.css">
-<style>
-.class-buttons{width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:10px 0 22px}.class-buttons h3{width:100%}#classButtons{display:flex;flex-wrap:wrap;gap:14px}
-#classButtons button{width:88px;height:74px;padding:8px;display:flex;align-items:center;justify-content:center;border-radius:18px;overflow:hidden}#classButtons img{width:58px;height:58px;object-fit:contain}.deck-source-tabs{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px}.deck-source-tabs button.active{outline:3px solid rgba(80,190,255,.65)}#urlPanel[hidden]{display:none!important}
-.deck-builder-summary{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}.builder-status{font-weight:700}.builder-status.full{color:#ffe17d}
-.deck-modal[hidden]{display:none!important}.deck-modal{position:fixed;inset:0;z-index:9999;background:rgba(2,5,18,.82);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box}.deck-modal-dialog{width:min(1500px,96vw);height:min(900px,94vh);background:linear-gradient(145deg,#101a49,#070d27);border:1px solid #b69a45;border-radius:20px;box-shadow:0 0 35px rgba(255,211,90,.22);display:flex;flex-direction:column;overflow:hidden}.deck-modal-head{display:flex;align-items:center;gap:16px;padding:16px 20px;border-bottom:1px solid rgba(255,220,120,.35)}.deck-modal-head h2{margin:0}.deck-modal-head .builder-status{margin-left:auto}.modal-close{font-size:24px;min-width:46px}.deck-modal-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:0;flex:1}.deck-main{display:flex;flex-direction:column;min-width:0;min-height:0;padding:14px}.builder-toolbar{display:grid;grid-template-columns:2fr repeat(5,1fr);gap:8px;margin-bottom:10px}.builder-toolbar input,.builder-toolbar select{min-width:0}.result-line{display:flex;align-items:center;gap:10px;margin:0 0 8px}.result-line #resultCount{font-weight:700}.card-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px;overflow:auto;min-height:0;padding:4px 6px 16px}.card-picker{position:relative;min-width:0;padding:5px!important;overflow:hidden}.card-picker img{width:100%;height:auto;aspect-ratio:5/7;object-fit:cover;display:block}.card-picker .cp-count{position:absolute;right:8px;top:8px;min-width:24px;height:24px;border-radius:50%;background:#17133d;color:#fff;display:grid;place-items:center;font-weight:800}.card-picker .cp-name{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card-picker.selected{outline:2px solid #ffe17d}.deck-side{border-left:1px solid rgba(255,220,120,.25);padding:14px;display:flex;flex-direction:column;min-height:0}.deck-side h3{margin:0 0 10px}.deck-selected-list{overflow:auto;min-height:0;flex:1}.deck-selected-chip{display:flex;align-items:center;gap:8px;margin:5px 0;padding:5px 7px;border:1px solid rgba(255,255,255,.15);border-radius:8px}.deck-selected-chip span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.deck-modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px;border-top:1px solid rgba(255,220,120,.3)}
-@media(max-width:900px){.deck-modal-body{grid-template-columns:1fr}.deck-side{display:none}.builder-toolbar{grid-template-columns:1fr 1fr 1fr}.builder-toolbar #cardSearch{grid-column:1/-1}}@media(max-width:560px){#classButtons button{width:72px;height:64px}#classButtons img{width:46px;height:46px}.builder-toolbar{grid-template-columns:1fr 1fr}.deck-modal{padding:5px}.deck-modal-dialog{width:100%;height:98vh}.card-picker-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デッキ登録</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    .class-buttons{width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:10px 0 22px}.class-buttons h3{width:100%}#classButtons{display:flex;flex-wrap:wrap;gap:14px}
+    #classButtons button{width:88px;height:74px;padding:8px;display:flex;align-items:center;justify-content:center;border-radius:18px;overflow:hidden}#classButtons img{width:58px;height:58px;object-fit:contain}
+    .deck-source-tabs{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px}.deck-source-tabs button.active{outline:3px solid rgba(80,190,255,.65)}
+    #urlPanel[hidden],#builderPanel[hidden]{display:none!important}
+    .builder-card{margin:14px 0;padding:16px;border:1px solid rgba(233,199,106,.45);border-radius:16px;background:linear-gradient(180deg,rgba(22,29,72,.88),rgba(8,12,30,.88));box-shadow:0 0 18px rgba(233,199,106,.12)}
+    .builder-card.ready{border-color:rgba(126,235,165,.7)}.builder-card strong{display:block;margin-bottom:8px}.builder-card .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    @media(max-width:560px){#classButtons button{width:72px;height:64px}#classButtons img{width:46px;height:46px}}
+  </style>
 </head>
 <body>
-<h1>デッキ登録</h1>
-<div class="class-buttons"><h3>クラス選択</h3><div id="classButtons"></div></div>
-<div><h3>デッキ名</h3><input type="text" id="deckName" placeholder="例: ミッドレンジロイヤル">
-<h3>登録方法</h3><div class="deck-source-tabs"><button type="button" id="urlTab" class="active">画像URLで登録</button><button type="button" id="builderTab">デッキ作成</button></div>
-<section id="urlPanel"><h3>デッキ画像URL</h3><div style="margin-top:20px"><button type="button" onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">公式デッキ作成はこちら</button></div><input type="text" id="deckUrl" placeholder="画像のURLを入力してください"><div id="imagePreview"></div></section>
-<div id="builderSummary" class="deck-builder-summary" hidden><span id="builderSummaryText">カード未選択</span><button type="button" id="editDeckButton">デッキを編集</button></div>
-<h3>メモ</h3><textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea></div>
-<button type="button" id="registerDeckButton">デッキを登録</button><button type="button" onclick="goToSelect()">デッキ選択へ</button>
+  <h1>デッキ登録</h1>
 
-<div id="deckModal" class="deck-modal" hidden aria-modal="true" role="dialog">
- <div class="deck-modal-dialog">
-  <div class="deck-modal-head"><h2>デッキ作成</h2><span id="loadState">カードデータを読み込みます。</span><span class="builder-status" id="builderStatus">0 / 40枚</span><button type="button" id="modalClose" class="modal-close">×</button></div>
-  <div class="deck-modal-body">
-   <main class="deck-main">
-    <div class="builder-toolbar"><input id="cardSearch" placeholder="カード名・能力で検索"><select id="packFilter"><option value="">全パック</option></select><select id="classFilter"><option value="">全クラス</option></select><select id="costFilter"><option value="">全コスト</option></select><select id="typeFilter"><option value="">全タイプ</option></select><select id="sortOrder"><option value="costAsc">コスト昇順</option><option value="costDesc">コスト降順</option><option value="nameAsc">名前順</option><option value="pack">パック順</option></select></div>
-    <div class="result-line"><span id="resultCount">0件</span><span>左クリック：追加 / 右クリック：1枚減らす</span></div><div id="cardGrid" class="card-picker-grid"></div>
-   </main>
-   <aside class="deck-side"><h3>選択中のカード</h3><div id="selectedCards" class="deck-selected-list"></div></aside>
+  <div class="class-buttons">
+    <h3>クラス選択</h3>
+    <div id="classButtons"></div>
   </div>
-  <div class="deck-modal-foot"><button type="button" id="clearDeckButton">選択をクリア</button><button type="button" id="modalDone">デッキ作成を完了</button></div>
- </div>
-</div>
-<script src="js/card_deck.js"></script>
-<script>
-const initialData=JSON.parse(localStorage.getItem('shadowverseData')||'{}');const currentEnvironmentId=initialData.currentEnvironmentId;const currentEnvironment=(initialData.environments||[]).find(e=>e.id===currentEnvironmentId);if(!currentEnvironmentId||!currentEnvironment){alert('環境が選択されていません。環境選択画面に戻ります。');location.href='environment_select.html'}
-const classIcons={'エルフ':'images/elf.svg','ロイヤル':'images/royal.svg','ウィッチ':'images/witch.svg','ドラゴン':'images/dragon.svg','ナイトメア':'images/nightmare.svg','ビショップ':'images/bishop.svg','ネメシス':'images/nemesis.svg'};
-let selectedClass=null,registrationMode='url',allCards=[],packNames={},selectedCardsMap={},cardsLoaded=false,renderTimer=null;const PAGE_SIZE=80;
-const $=id=>document.getElementById(id),classButtonsContainer=$('classButtons'),urlTab=$('urlTab'),builderTab=$('builderTab'),urlPanel=$('urlPanel'),builderSummary=$('builderSummary'),builderSummaryText=$('builderSummaryText'),deckModal=$('deckModal'),deckNameInput=$('deckName'),deckUrlInput=$('deckUrl'),deckMemoInput=$('deckMemo'),imagePreview=$('imagePreview'),loadState=$('loadState'),builderStatus=$('builderStatus'),cardSearch=$('cardSearch'),packFilter=$('packFilter'),classFilter=$('classFilter'),costFilter=$('costFilter'),typeFilter=$('typeFilter'),sortOrder=$('sortOrder'),selectedCards=$('selectedCards'),cardGrid=$('cardGrid'),resultCount=$('resultCount');
-Object.entries(classIcons).forEach(([cls,imgPath])=>{const btn=document.createElement('button');btn.type='button';btn.innerHTML=`<img src="${imgPath}" alt="${cls}" title="${cls}">`;btn.onclick=()=>{selectedClass=cls;[...classButtonsContainer.children].forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');scheduleRender()};classButtonsContainer.appendChild(btn)});
-deckUrlInput.addEventListener('input',updateImage);urlTab.onclick=()=>setMode('url');builderTab.onclick=async()=>{setMode('builder');await openBuilder()};$('editDeckButton').onclick=openBuilder;$('modalClose').onclick=closeBuilder;$('modalDone').onclick=closeBuilder;$('clearDeckButton').onclick=()=>{if(confirm('選択中のカードをすべて外しますか？')){selectedCardsMap={};renderSelectedCards();scheduleRender()}};$('registerDeckButton').onclick=registerDeck;deckModal.addEventListener('click',e=>{if(e.target===deckModal)closeBuilder()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!deckModal.hidden)closeBuilder()});
-[cardSearch,packFilter,classFilter,costFilter,typeFilter,sortOrder].forEach(el=>el.addEventListener(el.tagName==='INPUT'?'input':'change',scheduleRender));
-function setMode(mode){registrationMode=mode;const isUrl=mode==='url';urlPanel.hidden=!isUrl;builderSummary.hidden=isUrl;urlTab.classList.toggle('active',isUrl);builderTab.classList.toggle('active',!isUrl)}
-function updateImage(){const url=deckUrlInput.value.trim();imagePreview.innerHTML='';if(!url)return;const img=document.createElement('img');img.src=url;img.alt='デッキ画像プレビュー';imagePreview.appendChild(img)}
-async function openBuilder(){deckModal.hidden=false;document.body.style.overflow='hidden';if(!cardsLoaded)await loadCardData();else scheduleRender()}
-function closeBuilder(){deckModal.hidden=true;document.body.style.overflow='';updateBuilderSummary()}
-async function loadCardData(){loadState.textContent='カードデータを読み込み中...';try{const loaded=await CardDeckAPI.loadCards();allCards=loaded.cards||[];packNames=loaded.packNames||{};cardsLoaded=true;loadState.textContent=`${allCards.length}枚読み込み済み`;populateFilters();renderSelectedCards();scheduleRender()}catch(e){console.error(e);cardsLoaded=false;loadState.textContent='カードデータの読み込みに失敗しました。'}}
-function populateFilters(){packFilter.innerHTML='<option value="">全パック</option>';Object.entries(packNames).forEach(([id,name])=>addOption(packFilter,id,name));const vals=(key)=>[...new Set(allCards.map(c=>c[key]).filter(v=>v!==''&&v!=null))];classFilter.innerHTML='<option value="">全クラス</option>';vals('class').sort((a,b)=>String(a).localeCompare(String(b),'ja')).forEach(v=>addOption(classFilter,v,v));costFilter.innerHTML='<option value="">全コスト</option>';vals('cost').map(Number).filter(Number.isFinite).sort((a,b)=>a-b).forEach(v=>addOption(costFilter,String(v),`${v}PP`));typeFilter.innerHTML='<option value="">全タイプ</option>';vals('type').sort((a,b)=>String(a).localeCompare(String(b),'ja')).forEach(v=>addOption(typeFilter,v,v))}
-function addOption(s,v,l){const o=document.createElement('option');o.value=v;o.textContent=l;s.appendChild(o)}function totalSelected(){return Object.values(selectedCardsMap).reduce((a,b)=>a+b,0)}
-function changeCardCount(id,delta){const cur=selectedCardsMap[id]||0,next=cur+delta;if(next<0)return;if(next>3){alert('同じカードは3枚までです。');return}if(delta>0&&totalSelected()>=40){alert('デッキは40枚までです。');return}if(next===0)delete selectedCardsMap[id];else selectedCardsMap[id]=next;renderSelectedCards();scheduleRender()}
-function renderSelectedCards(){const total=totalSelected();builderStatus.textContent=`${total} / 40枚`;builderStatus.classList.toggle('full',total===40);selectedCards.innerHTML='';const byId=new Map(allCards.map(c=>[c.id,c]));Object.entries(selectedCardsMap).forEach(([id,count])=>{const c=byId.get(id);if(!c)return;const chip=document.createElement('div');chip.className='deck-selected-chip';chip.innerHTML=`<span>${c.name} ×${count}</span>`;const minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.onclick=()=>changeCardCount(id,-1);chip.appendChild(minus);selectedCards.appendChild(chip)});updateBuilderSummary()}
-function updateBuilderSummary(){const t=totalSelected();builderSummaryText.textContent=t?`${t} / 40枚 選択中`:'カード未選択'}function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(renderCards,120)}
-function renderCards(){if(!cardsLoaded)return;const kw=cardSearch.value.trim().toLowerCase();let cards=allCards.filter(c=>{if(kw&&!`${c.name||''} ${c.effect||''}`.toLowerCase().includes(kw))return false;if(packFilter.value&&c.pack!==packFilter.value)return false;if(classFilter.value&&c.class!==classFilter.value)return false;if(costFilter.value&&String(c.cost)!==costFilter.value)return false;if(typeFilter.value&&c.type!==typeFilter.value)return false;if(selectedClass&&c.class!==selectedClass&&c.class!=='ニュートラル')return false;return true});const sorters={costAsc:(a,b)=>Number(a.cost)-Number(b.cost)||String(a.name).localeCompare(String(b.name),'ja'),costDesc:(a,b)=>Number(b.cost)-Number(a.cost)||String(a.name).localeCompare(String(b.name),'ja'),nameAsc:(a,b)=>String(a.name).localeCompare(String(b.name),'ja'),pack:(a,b)=>String(a.pack).localeCompare(String(b.pack))||Number(a.cost)-Number(b.cost)};cards.sort(sorters[sortOrder.value]||sorters.costAsc);resultCount.textContent=`${cards.length}件（表示は先頭${Math.min(PAGE_SIZE,cards.length)}件）`;cardGrid.replaceChildren();const frag=document.createDocumentFragment();cards.slice(0,PAGE_SIZE).forEach(c=>{const count=selectedCardsMap[c.id]||0,b=document.createElement('button');b.type='button';b.className=`card-picker${count?' selected':''}`;const img=document.createElement('img');img.src=CardDeckAPI.cardImage(c);img.alt=c.name||'';img.loading='lazy';img.decoding='async';img.onerror=()=>img.remove();const badge=document.createElement('span');badge.className='cp-count';badge.textContent=count;const name=document.createElement('div');name.className='cp-name';name.textContent=`${c.cost}PP ${c.name}`;b.append(img,badge,name);b.onclick=()=>changeCardCount(c.id,1);b.oncontextmenu=e=>{e.preventDefault();changeCardCount(c.id,-1)};frag.appendChild(b)});cardGrid.appendChild(frag)}
-function registerDeck(){const name=deckNameInput.value.trim(),url=deckUrlInput.value.trim(),memo=deckMemoInput.value.trim();if(!selectedClass||!name){alert('クラスとデッキ名は必須です');return}if(registrationMode==='builder'&&totalSelected()!==40){alert('カードを合計40枚選択してください');return}const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');if(!data.decks)data.decks=[];const id='deck-'+Date.now();data.decks.push({id,environmentId:currentEnvironmentId,class:selectedClass,name,url:registrationMode==='url'?url:'',memo,records:[],deckType:registrationMode==='builder'?'builder':'image',cards:registrationMode==='builder'?Object.entries(selectedCardsMap).map(([cardId,count])=>({cardId,count})):[]});data.selectedDeckId=id;localStorage.setItem('shadowverseData',JSON.stringify(data));location.href='deck_select.html'}function goToSelect(){location.href='deck_select.html'}
-</script></body></html>
+
+  <div>
+    <h3>デッキ名</h3>
+    <input type="text" id="deckName" placeholder="例: ミッドレンジロイヤル" />
+
+    <h3>登録方法</h3>
+    <div class="deck-source-tabs">
+      <button type="button" id="urlTab" class="active">画像URLで登録</button>
+      <button type="button" id="builderTab">デッキ作成</button>
+    </div>
+
+    <section id="urlPanel">
+      <h3>デッキ画像URL</h3>
+      <div style="margin-top:20px">
+        <button type="button" onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">公式デッキ作成はこちら</button>
+      </div>
+      <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" />
+      <div id="imagePreview"></div>
+    </section>
+
+    <section id="builderPanel" hidden>
+      <div id="builderCard" class="builder-card">
+        <strong id="builderSummary">まだデッキが作成されていません。</strong>
+        <span>カードDBの情報を使って、同一カード3枚まで・合計40枚でデッキを作成します。</span>
+        <div class="actions">
+          <button type="button" id="openBuilderButton">デッキ作成画面を開く</button>
+          <button type="button" id="clearBuilderButton">作成内容をクリア</button>
+        </div>
+      </div>
+    </section>
+
+    <h3>メモ</h3>
+    <textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea>
+  </div>
+
+  <button type="button" id="registerDeckButton">デッキを登録</button>
+  <button type="button" onclick="goToSelect()">デッキ選択へ</button>
+
+  <script>
+    const DRAFT_KEY='shadowverseDeckRegisterDraft';
+    const BUILD_KEY='shadowverseDeckBuildDraft';
+    const COMPLETE_KEY='shadowverseDeckBuildCompleted';
+
+    const initialData=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
+    const currentEnvironmentId=initialData.currentEnvironmentId;
+    const currentEnvironment=(initialData.environments||[]).find(e=>e.id===currentEnvironmentId);
+    if(!currentEnvironmentId||!currentEnvironment){
+      alert('環境が選択されていません。環境選択画面に戻ります。');
+      location.href='environment_select.html';
+    }
+
+    const classIcons={'エルフ':'images/elf.svg','ロイヤル':'images/royal.svg','ウィッチ':'images/witch.svg','ドラゴン':'images/dragon.svg','ナイトメア':'images/nightmare.svg','ビショップ':'images/bishop.svg','ネメシス':'images/nemesis.svg'};
+    let selectedClass=null;
+    let registrationMode='url';
+
+    const classButtons=document.getElementById('classButtons');
+    const deckName=document.getElementById('deckName');
+    const deckUrl=document.getElementById('deckUrl');
+    const deckMemo=document.getElementById('deckMemo');
+    const imagePreview=document.getElementById('imagePreview');
+    const urlTab=document.getElementById('urlTab');
+    const builderTab=document.getElementById('builderTab');
+    const urlPanel=document.getElementById('urlPanel');
+    const builderPanel=document.getElementById('builderPanel');
+    const builderCard=document.getElementById('builderCard');
+    const builderSummary=document.getElementById('builderSummary');
+
+    Object.entries(classIcons).forEach(([cls,path])=>{
+      const btn=document.createElement('button'); btn.type='button';
+      btn.innerHTML=`<img src="${path}" alt="${cls}" title="${cls}">`;
+      btn.addEventListener('click',()=>selectClass(cls,btn));
+      classButtons.appendChild(btn);
+    });
+
+    restoreDraft();
+    updateBuilderSummary();
+    updateImage();
+
+    urlTab.addEventListener('click',()=>setMode('url'));
+    builderTab.addEventListener('click',()=>{
+      setMode('builder');
+      openBuilder();
+    });
+    document.getElementById('openBuilderButton').addEventListener('click',openBuilder);
+    document.getElementById('clearBuilderButton').addEventListener('click',()=>{
+      if(!confirm('作成中のデッキ内容をクリアしますか？')) return;
+      sessionStorage.removeItem(BUILD_KEY);
+      sessionStorage.removeItem(COMPLETE_KEY);
+      updateBuilderSummary();
+    });
+    deckUrl.addEventListener('input',updateImage);
+    document.getElementById('registerDeckButton').addEventListener('click',registerDeck);
+
+    function selectClass(cls,btn){
+      selectedClass=cls;
+      [...classButtons.children].forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function setMode(mode){
+      registrationMode=mode;
+      const isUrl=mode==='url';
+      urlPanel.hidden=!isUrl;
+      builderPanel.hidden=isUrl;
+      urlTab.classList.toggle('active',isUrl);
+      builderTab.classList.toggle('active',!isUrl);
+    }
+
+    function saveDraft(){
+      sessionStorage.setItem(DRAFT_KEY,JSON.stringify({
+        className:selectedClass,
+        name:deckName.value.trim(),
+        url:deckUrl.value.trim(),
+        memo:deckMemo.value,
+        mode:'builder'
+      }));
+    }
+
+    function restoreDraft(){
+      const draft=JSON.parse(sessionStorage.getItem(DRAFT_KEY)||'null');
+      if(!draft) return;
+      if(draft.name!=null) deckName.value=draft.name;
+      if(draft.url!=null) deckUrl.value=draft.url;
+      if(draft.memo!=null) deckMemo.value=draft.memo;
+      if(draft.className){
+        const entries=[...classButtons.children];
+        const idx=Object.keys(classIcons).indexOf(draft.className);
+        if(idx>=0) selectClass(draft.className,entries[idx]);
+      }
+      if(draft.mode==='builder'||sessionStorage.getItem(COMPLETE_KEY)==='1') setMode('builder');
+    }
+
+    function openBuilder(){
+      if(!selectedClass){ alert('先にクラスを選択してください。'); return; }
+      saveDraft();
+      location.href='deck_builder.html';
+    }
+
+    function updateBuilderSummary(){
+      const selected=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
+      const total=Object.values(selected).reduce((s,n)=>s+n,0);
+      const completed=sessionStorage.getItem(COMPLETE_KEY)==='1'&&total===40;
+      builderSummary.textContent=completed?'40枚のデッキを作成済みです。':total?`${total} / 40枚 選択中です。`:'まだデッキが作成されていません。';
+      builderCard.classList.toggle('ready',completed);
+    }
+
+    function updateImage(){
+      const url=deckUrl.value.trim(); imagePreview.innerHTML='';
+      if(!url) return;
+      const img=document.createElement('img'); img.src=url; img.alt='デッキ画像プレビュー'; imagePreview.appendChild(img);
+    }
+
+    function registerDeck(){
+      const name=deckName.value.trim();
+      const url=deckUrl.value.trim();
+      const memo=deckMemo.value.trim();
+      if(!selectedClass||!name){ alert('クラスとデッキ名は必須です'); return; }
+
+      let cards=[];
+      if(registrationMode==='builder'){
+        const map=JSON.parse(sessionStorage.getItem(BUILD_KEY)||'{}');
+        const total=Object.values(map).reduce((s,n)=>s+n,0);
+        if(total!==40||sessionStorage.getItem(COMPLETE_KEY)!=='1'){
+          alert('デッキ作成画面で40枚のデッキを完成させてください。'); return;
+        }
+        cards=Object.entries(map).map(([cardId,count])=>({cardId,count}));
+      }
+
+      const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
+      if(!data.decks) data.decks=[];
+      const id='deck-'+Date.now();
+      data.decks.push({
+        id,
+        environmentId:currentEnvironmentId,
+        class:selectedClass,
+        name,
+        url:registrationMode==='url'?url:'',
+        memo,
+        records:[],
+        deckType:registrationMode==='builder'?'builder':'image',
+        cards
+      });
+      data.selectedDeckId=id;
+      localStorage.setItem('shadowverseData',JSON.stringify(data));
+      sessionStorage.removeItem(DRAFT_KEY);
+      sessionStorage.removeItem(BUILD_KEY);
+      sessionStorage.removeItem(COMPLETE_KEY);
+      location.href='deck_select.html';
+    }
+
+    function goToSelect(){ location.href='deck_select.html'; }
+  </script>
+</body>
+</html>

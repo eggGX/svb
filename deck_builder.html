@@ -17,13 +17,14 @@
     .toolbar { display:grid; grid-template-columns:2fr repeat(4, 1fr) 1.2fr; gap:10px; margin-bottom:12px; }
     .toolbar input, .toolbar select { width:100%; box-sizing:border-box; }
     .summary-line { display:flex; justify-content:space-between; gap:12px; align-items:center; margin:8px 0 12px; flex-wrap:wrap; }
-    .card-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; }
-    .card-item { position:relative; padding:0; overflow:hidden; border-radius:14px; background:#0b1230; border:1px solid rgba(125,180,255,.35); cursor:pointer; min-width:0; }
-    .card-item.selected { outline:2px solid rgba(233,199,106,.85); }
-    .card-item.maxed { opacity:.72; }
-    .card-item img { width:100%; aspect-ratio:0.72; object-fit:cover; display:block; }
-    .card-item .name { padding:7px 8px 9px; font-size:.85rem; line-height:1.35; min-height:2.8em; }
-    .card-item .count { position:absolute; top:7px; right:7px; min-width:30px; height:30px; border-radius:999px; display:grid; place-items:center; font-weight:800; background:rgba(8,12,30,.9); border:1px solid rgba(233,199,106,.8); }
+    .card-grid { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; }
+    .card-item { position:relative; padding:6px 6px 8px !important; overflow:hidden; border-radius:4px !important; background:#081024; border:1px solid rgba(125,180,255,.45); cursor:pointer; min-width:0; display:flex; flex-direction:column; align-items:stretch; }
+    .card-item.selected { outline:2px solid rgba(233,199,106,.9) !important; opacity:1 !important; }
+    .card-item.maxed { outline:2px solid rgba(126,235,165,.9) !important; opacity:1 !important; }
+    .card-item img { width:100%; height:auto; aspect-ratio:auto !important; object-fit:contain !important; display:block; border-radius:0 !important; background:#050914; }
+    .card-item .name { padding:8px 4px 2px; font-size:.82rem; line-height:1.35; min-height:2.6em; text-align:center; white-space:normal; overflow-wrap:anywhere; }
+    .card-item .count { position:absolute !important; top:7px !important; right:7px !important; min-width:28px !important; height:28px !important; padding:0 5px !important; border-radius:4px !important; display:grid !important; place-items:center !important; visibility:visible !important; opacity:1 !important; z-index:10 !important; color:#fff !important; font-weight:800 !important; background:rgba(4,8,20,.96) !important; border:1px solid rgba(233,199,106,.9) !important; box-sizing:border-box !important; pointer-events:none !important; }
+    .card-item.selected .count, .card-item.maxed .count { display:grid !important; visibility:visible !important; opacity:1 !important; color:#fff !important; }
     .selected-list { display:flex; flex-direction:column; gap:7px; }
     .selected-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.05); }
     .selected-row button { min-width:36px; padding:5px 8px; }
@@ -56,7 +57,7 @@
         <div class="toolbar">
           <input id="cardSearch" placeholder="カード名・能力で検索" />
           <select id="packFilter"><option value="">全パック</option></select>
-          <select id="classFilter"><option value="">全クラス</option></select>
+          <select id="classFilter"></select>
           <select id="costFilter"><option value="">全コスト</option></select>
           <select id="typeFilter"><option value="">全タイプ</option></select>
           <select id="sortSelect">
@@ -86,12 +87,14 @@
   <script>
     const DRAFT_KEY = 'shadowverseDeckRegisterDraft';
     const BUILD_KEY = 'shadowverseDeckBuildDraft';
+    const COMPLETE_KEY = 'shadowverseDeckBuildCompleted';
     const draft = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null');
     if (!draft || !draft.className) {
-      alert('デッキ登録画面からデッキ作成を開始してください。');
+      alert('デッキ登録またはデッキ編集画面からデッキ作成を開始してください。');
       location.href = 'deck_register.html';
     }
 
+    const returnTo = draft.returnTo || (draft.context === 'edit' ? 'deck_edit.html' : 'deck_register.html');
     let allCards = [];
     let packNames = {};
     let selectedCardsMap = JSON.parse(sessionStorage.getItem(BUILD_KEY) || '{}');
@@ -117,7 +120,6 @@
     const nextPage = document.getElementById('nextPage');
 
     deckLabel.textContent = `${draft.name || '名称未設定'} / ${draft.className}`;
-
     init();
 
     async function init() {
@@ -137,9 +139,12 @@
 
     function populateFilters() {
       Object.entries(packNames).forEach(([id,name]) => addOption(packFilter,id,name));
-      [...new Set(allCards.map(c=>c.class).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(v=>addOption(classFilter,v,v));
+      classFilter.innerHTML = '';
+      addOption(classFilter, '', `全クラス（${draft.className}＋ニュートラル）`);
+      const allowedClasses = [draft.className, 'ニュートラル'].filter((v,i,a)=>v && a.indexOf(v)===i);
+      allowedClasses.forEach(v => addOption(classFilter, v, v));
       [...new Set(allCards.map(c=>Number(c.cost)).filter(Number.isFinite))].sort((a,b)=>a-b).forEach(v=>addOption(costFilter,String(v),`${v}PP`));
-      [...new Set(allCards.map(c=>c.type).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(v=>addOption(typeFilter,v,v));
+      [...new Set(allCards.filter(c=>allowedClasses.includes(c.class)).map(c=>c.type).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(v=>addOption(typeFilter,v,v));
     }
 
     function addOption(select,value,label){ const o=document.createElement('option'); o.value=value; o.textContent=label; select.appendChild(o); }
@@ -153,6 +158,7 @@
       if(delta>0 && totalSelected()>=40){ alert('デッキは40枚までです。'); return; }
       if(next===0) delete selectedCardsMap[cardId]; else selectedCardsMap[cardId]=next;
       sessionStorage.setItem(BUILD_KEY, JSON.stringify(selectedCardsMap));
+      sessionStorage.removeItem(COMPLETE_KEY);
       renderSelectedCards();
       renderPage();
     }
@@ -161,8 +167,9 @@
       const total=totalSelected();
       builderStatus.textContent=`${total} / 40枚`;
       selectedCards.innerHTML='';
+      const byId = new Map(allCards.map(c=>[c.id,c]));
       Object.entries(selectedCardsMap).forEach(([cardId,count])=>{
-        const card=allCards.find(c=>c.id===cardId); if(!card) return;
+        const card=byId.get(cardId); if(!card) return;
         const row=document.createElement('div'); row.className='selected-row';
         const label=document.createElement('span'); label.textContent=`${card.name} ×${count}`;
         const minus=document.createElement('button'); minus.type='button'; minus.textContent='−'; minus.addEventListener('click',()=>changeCardCount(cardId,-1));
@@ -200,18 +207,20 @@
       const start=(currentPage-1)*PAGE_SIZE;
       const pageCards=filteredCards.slice(start,start+PAGE_SIZE);
       cardGrid.innerHTML='';
+      const frag=document.createDocumentFragment();
       pageCards.forEach(card=>{
         const count=selectedCardsMap[card.id]||0;
         const btn=document.createElement('button');
         btn.type='button'; btn.className=`card-item${count?' selected':''}${count>=3?' maxed':''}`;
         const img=document.createElement('img'); img.src=CardDeckAPI.cardImage(card); img.alt=card.name||''; img.loading='lazy'; img.decoding='async'; img.addEventListener('error',()=>img.remove());
-        const badge=document.createElement('span'); badge.className='count'; badge.textContent=count;
+        const badge=document.createElement('span'); badge.className='count'; badge.textContent=String(count);
         const name=document.createElement('div'); name.className='name'; name.textContent=`${card.cost}PP ${card.name}`;
         btn.append(img,badge,name);
         btn.addEventListener('click',()=>changeCardCount(card.id,1));
         btn.addEventListener('contextmenu',e=>{e.preventDefault(); changeCardCount(card.id,-1);});
-        cardGrid.appendChild(btn);
+        frag.appendChild(btn);
       });
+      cardGrid.appendChild(frag);
       resultCount.textContent=`${filteredCards.length}件中 ${filteredCards.length?start+1:0}〜${Math.min(start+PAGE_SIZE,filteredCards.length)}件を表示`;
       pageInfo.textContent=`${currentPage} / ${totalPages}`;
       prevPage.disabled=currentPage<=1;
@@ -226,10 +235,10 @@
     document.getElementById('completeBtn').addEventListener('click',()=>{
       if(totalSelected()!==40){ alert('カードを合計40枚選択してください。'); return; }
       sessionStorage.setItem(BUILD_KEY, JSON.stringify(selectedCardsMap));
-      sessionStorage.setItem('shadowverseDeckBuildCompleted','1');
-      location.href='deck_register.html';
+      sessionStorage.setItem(COMPLETE_KEY,'1');
+      location.href=returnTo;
     });
-    document.getElementById('cancelBtn').addEventListener('click',()=>location.href='deck_register.html');
+    document.getElementById('cancelBtn').addEventListener('click',()=>location.href=returnTo);
   </script>
 </body>
 </html>

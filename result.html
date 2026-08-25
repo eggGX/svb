@@ -149,6 +149,7 @@ img.icon {
   <!-- 右上にデッキ画像表示 -->
   <div id="deckImageContainer"></div>
 
+  <script src="js/card_deck.js"></script>
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
     const currentEnvironmentId = data.currentEnvironmentId;
@@ -299,23 +300,22 @@ img.icon {
       container.innerHTML = '';
       container.appendChild(table);
     }
-    function updateDeckImage() {
+    async function updateDeckImage() {
       const container = document.getElementById('deckImageContainer');
-
-      // URLが存在しない場合はコンテナを非表示にする
-      if (!selectedDeck || !selectedDeck.url) {
-        container.style.display = 'none';
-        return;
-      }
-
-      // URLが存在する場合は表示して画像を追加
-      container.style.display = 'block';
       container.innerHTML = '';
-
-      const img = document.createElement('img');
-      img.src = selectedDeck.url;
-      img.alt = selectedDeck.name;
-      container.appendChild(img);
+      if (!selectedDeck) { container.style.display='none'; return; }
+      try {
+        let byId = {};
+        if (selectedDeck.deckType === 'builder') {
+          const loaded = await CardDeckAPI.loadCards();
+          byId = Object.fromEntries(loaded.cards.map(c => [c.id,c]));
+        }
+        const shown = CardDeckAPI.renderDeckPreview(selectedDeck, container, byId, true);
+        container.style.display = shown ? 'block' : 'none';
+      } catch(e) {
+        if (selectedDeck.url) { CardDeckAPI.renderDeckPreview(selectedDeck, container, {}, true); container.style.display='block'; }
+        else container.style.display='none';
+      }
     }
 
     displayTotalStats();

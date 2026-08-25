@@ -154,6 +154,7 @@ img.icon {
     </div>
   </div>
 
+  <script src="js/card_deck.js"></script>
   <script>
     const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
     const currentEnvironmentId = data.currentEnvironmentId;
@@ -182,11 +183,7 @@ img.icon {
             <span class="deck-name">${deck.name}</span>
           </h3>
 
-          ${deck.url ? `
-            <div class="thumb">
-              <img src="${deck.url}" alt="デッキ画像" data-zoomable>
-            </div>` : ''
-          }
+          <div class="thumb deck-preview-target" data-deck-id="${deck.id}"></div>
 
           ${deck.memo ? `<p class="deck-memo">${deck.memo}</p>` : ''}
 
@@ -203,6 +200,13 @@ img.icon {
 
         container.appendChild(div);
       });
+      CardDeckAPI.loadCards().then(({cards}) => {
+        const byId = Object.fromEntries(cards.map(c => [c.id,c]));
+        decks.forEach(deck => {
+          const el = document.querySelector(`.deck-preview-target[data-deck-id="${deck.id}"]`);
+          if (el && !CardDeckAPI.renderDeckPreview(deck, el, byId, true)) el.style.display='none';
+        });
+      }).catch(console.warn);
     }
 
     function selectDeck(id) {

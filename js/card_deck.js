@@ -35,5 +35,51 @@
     if(deck && deck.url){ const img=document.createElement('img'); img.src=deck.url; img.alt=deck.name||'デッキ画像'; target.appendChild(img); return true; }
     return false;
   };
+
+  // デッキ作成画面ではカードを四角いタイルで、画像全体が切れずに見えるようにする。
+  if (location.pathname.endsWith('/deck_builder.html') || location.pathname.endsWith('deck_builder.html')) {
+    const style = document.createElement('style');
+    style.textContent = `
+      .card-grid {
+        align-items: start !important;
+      }
+      .card-item {
+        border-radius: 4px !important;
+        overflow: hidden !important;
+        padding: 6px !important;
+        background: #09102a !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        height: auto !important;
+        min-height: 0 !important;
+      }
+      .card-item img {
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        aspect-ratio: auto !important;
+        object-fit: contain !important;
+        object-position: center !important;
+        border-radius: 0 !important;
+        display: block !important;
+        background: #05091a !important;
+      }
+      .card-item .name {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        min-height: 0 !important;
+        padding: 7px 4px 4px !important;
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+      }
+      .card-item .count {
+        border-radius: 4px !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   window.CardDeckAPI=API;
 })();

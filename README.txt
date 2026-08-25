@@ -13,3 +13,5 @@ Shadowverse 戦績管理 + Card DB 統合版 (prototype 1)
 - cardData は fetch で読むため、GitHub Pages 上での利用を想定しています。
 - 既存デッキは deckType が無くても URL デッキとしてそのまま表示されます。
 - deck_edit.html は既存編集画面を維持しています。構築済み40枚の再編集UIは次段階で追加できます。
+
+Self-check v1.2: inline JavaScript syntax, JSON parsing, local static paths, original-page diff scope checked.

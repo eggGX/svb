@@ -1,20 +1,462 @@
-<!doctype html><html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="style/style.css"><title>デッキ登録</title></head><body>
-<h1>デッキ登録</h1><div class="class-buttons"><h3>クラス選択</h3><div id="classButtons"></div></div>
-<h3>デッキ名</h3><input id="deckName" placeholder="例: ミッドレンジロイヤル">
-<h3>登録方法</h3><div class="deck-source-tabs"><button id="urlTab" class="active">画像URLで登録</button><button id="builderTab">カード40枚で作成</button></div>
-<section id="urlPanel"><div><button onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">公式デッキ作成はこちら</button></div><input id="deckUrl" placeholder="デッキ画像URL" oninput="updateImage()"><div id="imagePreview"></div></section>
-<section id="builderPanel" class="builder-panel" hidden><div id="loadState">カードデータを読み込み中...</div><div class="builder-status" id="builderStatus">0 / 40枚</div><div class="builder-toolbar"><input id="cardSearch" placeholder="カード名・能力で検索"><select id="packFilter"><option value="">全パック</option></select><select id="classFilter"><option value="">全クラス</option></select><select id="costFilter"><option value="">全コスト</option></select><select id="typeFilter"><option value="">全タイプ</option></select></div><div id="selectedCards" class="deck-selected-list"></div><div id="cardGrid" class="card-picker-grid"></div></section>
-<h3>メモ</h3><textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea><br><button id="saveBtn">デッキを登録</button><button onclick="location.href='deck_select.html'">デッキ選択へ</button>
-<script src="js/card_deck.js"></script><script>
-const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}'); const envId=data.currentEnvironmentId; const env=(data.environments||[]).find(e=>e.id===envId); if(!env) location.href='environment_select.html';
-const icons={'エルフ':'elf.svg','ロイヤル':'royal.svg','ウィッチ':'witch.svg','ドラゴン':'dragon.svg','ナイトメア':'nightmare.svg','ビショップ':'bishop.svg','ネメシス':'nemesis.svg'}; let selectedClass=null, mode='url', allCards=[],packNames={},selected={};
-const cb=document.getElementById('classButtons'); Object.entries(icons).forEach(([c,f])=>{const b=document.createElement('button');b.innerHTML=`<img src="images/${f}" class="class-icon" title="${c}">`;b.onclick=()=>{selectedClass=c;[...cb.children].forEach(x=>x.classList.remove('selected'));b.classList.add('selected');renderCards()};cb.appendChild(b)});
-urlTab.onclick=()=>setMode('url'); builderTab.onclick=()=>setMode('builder'); function setMode(m){mode=m;urlPanel.hidden=m!=='url';builderPanel.hidden=m!=='builder';urlTab.classList.toggle('active',m==='url');builderTab.classList.toggle('active',m==='builder')}
-function updateImage(){imagePreview.innerHTML=deckUrl.value?`<img src="${deckUrl.value}">`:''}
-CardDeckAPI.loadCards().then(x=>{allCards=x.cards;packNames=x.packNames;loadState.textContent=`${allCards.length}枚読み込み済み`; Object.entries(packNames).forEach(([v,n])=>packFilter.add(new Option(n,v))); [...new Set(allCards.map(c=>c.class))].filter(Boolean).sort().forEach(v=>classFilter.add(new Option(v,v))); [...new Set(allCards.map(c=>c.cost))].sort((a,b)=>a-b).forEach(v=>costFilter.add(new Option(v,v))); [...new Set(allCards.map(c=>c.type))].filter(Boolean).sort().forEach(v=>typeFilter.add(new Option(v,v))); renderCards()}).catch(e=>loadState.textContent='カードデータを読み込めませんでした。GitHub Pages等のHTTP環境で開いてください。');
-[cardSearch,packFilter,classFilter,costFilter,typeFilter].forEach(e=>e.addEventListener('input',renderCards));
-function total(){return Object.values(selected).reduce((a,b)=>a+b,0)} function change(id,d){const n=Math.max(0,Math.min(3,(selected[id]||0)+d));if(d>0&&total()>=40)return;if(n)selected[id]=n;else delete selected[id];renderCards();renderSelected()}
-function renderSelected(){builderStatus.textContent=`${total()} / 40枚`;builderStatus.classList.toggle('full',total()===40);selectedCards.innerHTML='';Object.entries(selected).forEach(([id,n])=>{const c=allCards.find(x=>x.id===id);if(!c)return;const d=document.createElement('div');d.className='deck-selected-chip';d.innerHTML=`<span>${c.name} ×${n}</span><button type="button">−</button>`;d.querySelector('button').onclick=()=>change(id,-1);selectedCards.appendChild(d)})}
-function renderCards(){if(!allCards.length)return;const q=cardSearch.value.trim().toLowerCase();let arr=allCards.filter(c=>(!q||(`${c.name} ${c.effect||''}`).toLowerCase().includes(q)))&&(!packFilter.value||c.pack===packFilter.value)&&(!classFilter.value||c.class===classFilter.value)&&(!costFilter.value||String(c.cost)===costFilter.value)&&(!typeFilter.value||c.type===typeFilter.value)&&(!selectedClass||c.class===selectedClass||c.class==='ニュートラル'));arr.sort((a,b)=>a.cost-b.cost||a.name.localeCompare(b.name,'ja'));cardGrid.innerHTML='';arr.forEach(c=>{const n=selected[c.id]||0,d=document.createElement('button');d.type='button';d.className='card-picker'+(n?' selected':'')+(n>=3?' maxed':'');d.innerHTML=`<img src="${CardDeckAPI.cardImage(c)}"><span class="cp-count">${n}</span><div class="cp-name">${c.cost}PP ${c.name}</div>`;d.onclick=()=>change(c.id,1);d.oncontextmenu=e=>{e.preventDefault();change(c.id,-1)};cardGrid.appendChild(d)})}
-saveBtn.onclick=()=>{const name=deckName.value.trim(),memo=deckMemo.value.trim();if(!selectedClass||!name)return alert('クラスとデッキ名は必須です');if(mode==='builder'&&total()!==40)return alert('カードを合計40枚選択してください');const d=JSON.parse(localStorage.getItem('shadowverseData')||'{}');d.decks=d.decks||[];const id='deck-'+Date.now();const deck={id,environmentId:envId,class:selectedClass,name,memo,records:[],deckType:mode==='builder'?'builder':'image',url:mode==='url'?deckUrl.value.trim():'',cards:mode==='builder'?Object.entries(selected).map(([cardId,count])=>({cardId,count})):[]};d.decks.push(deck);d.selectedDeckId=id;localStorage.setItem('shadowverseData',JSON.stringify(d));location.href='deck_select.html'};
-</script></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>デッキ登録</title>
+  <link rel="stylesheet" href="style/style.css" />
+  <style>
+    /* 既存のクラス選択UIを維持 */
+    .class-button-group,
+    #classButtons,
+    #class-buttons,
+    .class-buttons {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 14px !important;
+      margin: 10px 0 22px !important;
+      overflow: visible !important;
+    }
+
+    .class-button,
+    #classButtons button,
+    #class-buttons button,
+    .class-buttons button {
+      width: 88px !important;
+      height: 74px !important;
+      min-width: 88px !important;
+      min-height: 74px !important;
+      max-width: 88px !important;
+      max-height: 74px !important;
+      box-sizing: border-box !important;
+      padding: 8px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      vertical-align: middle !important;
+      overflow: hidden !important;
+      border-radius: 18px !important;
+      line-height: 1 !important;
+    }
+
+    .class-button img,
+    .class-button svg,
+    #classButtons button img,
+    #classButtons button svg,
+    #class-buttons button img,
+    #class-buttons button svg,
+    .class-buttons button img,
+    .class-buttons button svg,
+    #classButtons .class-icon,
+    #class-buttons .class-icon,
+    .class-buttons .class-icon {
+      width: 58px !important;
+      height: 58px !important;
+      max-width: 58px !important;
+      max-height: 58px !important;
+      display: block !important;
+      margin: auto !important;
+      object-fit: contain !important;
+      flex: 0 0 auto !important;
+      position: static !important;
+      transform: none !important;
+    }
+
+    .class-chip,
+    .icon,
+    .deck-title img.icon,
+    img.icon {
+      display: inline-block !important;
+      object-fit: contain !important;
+      vertical-align: middle !important;
+      flex: 0 0 auto !important;
+    }
+
+    #inputArea,
+    #summary,
+    #totalStats,
+    #recentStats,
+    #chartContainer,
+    .section,
+    .field,
+    .deck,
+    .bo1-card {
+      box-sizing: border-box !important;
+      max-width: 100% !important;
+    }
+
+    .deck-source-tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 10px 0 16px;
+    }
+    .deck-source-tabs button.active {
+      outline: 3px solid rgba(80,190,255,.65);
+    }
+    #urlPanel[hidden], #builderPanel[hidden] { display: none !important; }
+    #urlPanel, #builderPanel { margin-bottom: 20px; }
+
+    @media (max-width: 560px) {
+      .class-button,
+      #classButtons button,
+      #class-buttons button,
+      .class-buttons button {
+        width: 72px !important;
+        height: 64px !important;
+        min-width: 72px !important;
+        min-height: 64px !important;
+        max-width: 72px !important;
+        max-height: 64px !important;
+        padding: 7px !important;
+      }
+      .class-button img,
+      .class-button svg,
+      #classButtons button img,
+      #classButtons button svg,
+      #class-buttons button img,
+      #class-buttons button svg,
+      .class-buttons button img,
+      .class-buttons button svg,
+      #classButtons .class-icon,
+      #class-buttons .class-icon,
+      .class-buttons .class-icon {
+        width: 46px !important;
+        height: 46px !important;
+        max-width: 46px !important;
+        max-height: 46px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>デッキ登録</h1>
+
+  <div class="class-buttons">
+    <h3>クラス選択</h3>
+    <div id="classButtons"></div>
+  </div>
+
+  <div>
+    <h3>デッキ名</h3>
+    <input type="text" id="deckName" placeholder="例: ミッドレンジロイヤル" />
+
+    <h3>登録方法</h3>
+    <div class="deck-source-tabs">
+      <button type="button" id="urlTab" class="active">画像URLで登録</button>
+      <button type="button" id="builderTab">デッキ作成</button>
+    </div>
+
+    <section id="urlPanel">
+      <h3>デッキ画像URL</h3>
+      <div style="margin-top: 20px;">
+        <button type="button" onclick="window.open('https://shadowverse-wb.com/ja/deck/build/')">公式デッキ作成はこちら</button>
+      </div>
+      <input type="text" id="deckUrl" placeholder="画像のURLを入力してください" />
+      <div id="imagePreview"></div>
+    </section>
+
+    <section id="builderPanel" class="builder-panel" hidden>
+      <div id="loadState">「デッキ作成」を選ぶとカードデータを読み込みます。</div>
+      <div class="builder-status" id="builderStatus">0 / 40枚</div>
+      <div class="builder-toolbar">
+        <input id="cardSearch" placeholder="カード名・能力で検索" />
+        <select id="packFilter"><option value="">全パック</option></select>
+        <select id="classFilter"><option value="">全クラス</option></select>
+        <select id="costFilter"><option value="">全コスト</option></select>
+        <select id="typeFilter"><option value="">全タイプ</option></select>
+      </div>
+      <div id="selectedCards" class="deck-selected-list"></div>
+      <div id="cardGrid" class="card-picker-grid"></div>
+    </section>
+
+    <h3>メモ</h3>
+    <textarea id="deckMemo" rows="4" placeholder="自由記述欄"></textarea>
+  </div>
+
+  <button type="button" id="registerDeckButton">デッキを登録</button>
+  <button type="button" onclick="goToSelect()">デッキ選択へ</button>
+
+  <script src="js/card_deck.js"></script>
+  <script>
+    const initialData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+    const currentEnvironmentId = initialData.currentEnvironmentId;
+    const currentEnvironment = (initialData.environments || []).find(env => env.id === currentEnvironmentId);
+
+    if (!currentEnvironmentId || !currentEnvironment) {
+      alert('環境が選択されていません。環境選択画面に戻ります。');
+      location.href = 'environment_select.html';
+    }
+
+    const classIcons = {
+      'エルフ': 'images/elf.svg',
+      'ロイヤル': 'images/royal.svg',
+      'ウィッチ': 'images/witch.svg',
+      'ドラゴン': 'images/dragon.svg',
+      'ナイトメア': 'images/nightmare.svg',
+      'ビショップ': 'images/bishop.svg',
+      'ネメシス': 'images/nemesis.svg'
+    };
+
+    let selectedClass = null;
+    let registrationMode = 'url';
+    let allCards = [];
+    let packNames = {};
+    let selectedCardsMap = {};
+    let cardsLoaded = false;
+
+    const classButtonsContainer = document.getElementById('classButtons');
+    const urlTab = document.getElementById('urlTab');
+    const builderTab = document.getElementById('builderTab');
+    const urlPanel = document.getElementById('urlPanel');
+    const builderPanel = document.getElementById('builderPanel');
+    const deckNameInput = document.getElementById('deckName');
+    const deckUrlInput = document.getElementById('deckUrl');
+    const deckMemoInput = document.getElementById('deckMemo');
+    const imagePreview = document.getElementById('imagePreview');
+    const loadState = document.getElementById('loadState');
+    const builderStatus = document.getElementById('builderStatus');
+    const cardSearch = document.getElementById('cardSearch');
+    const packFilter = document.getElementById('packFilter');
+    const classFilter = document.getElementById('classFilter');
+    const costFilter = document.getElementById('costFilter');
+    const typeFilter = document.getElementById('typeFilter');
+    const selectedCards = document.getElementById('selectedCards');
+    const cardGrid = document.getElementById('cardGrid');
+
+    Object.entries(classIcons).forEach(([cls, imgPath]) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.innerHTML = `<img src="${imgPath}" alt="${cls}" title="${cls}" class="class-icon" />`;
+      btn.addEventListener('click', () => {
+        selectedClass = cls;
+        [...classButtonsContainer.children].forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        if (registrationMode === 'builder' && cardsLoaded) renderCards();
+      });
+      classButtonsContainer.appendChild(btn);
+    });
+
+    deckUrlInput.addEventListener('input', updateImage);
+    urlTab.addEventListener('click', () => setMode('url'));
+    builderTab.addEventListener('click', async () => {
+      setMode('builder');
+      if (!cardsLoaded) await loadCardData();
+    });
+    document.getElementById('registerDeckButton').addEventListener('click', registerDeck);
+
+    [cardSearch, packFilter, classFilter, costFilter, typeFilter].forEach(el => {
+      el.addEventListener(el.tagName === 'INPUT' ? 'input' : 'change', renderCards);
+    });
+
+    function setMode(mode) {
+      registrationMode = mode;
+      const isUrl = mode === 'url';
+      urlPanel.hidden = !isUrl;
+      builderPanel.hidden = isUrl;
+      urlTab.classList.toggle('active', isUrl);
+      builderTab.classList.toggle('active', !isUrl);
+    }
+
+    function updateImage() {
+      const url = deckUrlInput.value.trim();
+      imagePreview.innerHTML = '';
+      if (!url) return;
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = 'デッキ画像プレビュー';
+      imagePreview.appendChild(img);
+    }
+
+    async function loadCardData() {
+      loadState.textContent = 'カードデータを読み込み中...';
+      try {
+        const loaded = await CardDeckAPI.loadCards();
+        allCards = loaded.cards || [];
+        packNames = loaded.packNames || {};
+        cardsLoaded = true;
+        loadState.textContent = `${allCards.length}枚のカードを読み込みました。`;
+        populateFilters();
+        renderCards();
+      } catch (error) {
+        console.error(error);
+        cardsLoaded = false;
+        loadState.textContent = 'カードデータの読み込みに失敗しました。GitHub Pages上で開いているか確認してください。';
+      }
+    }
+
+    function populateFilters() {
+      packFilter.innerHTML = '<option value="">全パック</option>';
+      Object.entries(packNames).forEach(([id, name]) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = name;
+        packFilter.appendChild(option);
+      });
+
+      const classes = [...new Set(allCards.map(c => c.class).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'));
+      classFilter.innerHTML = '<option value="">全クラス</option>';
+      classes.forEach(value => addOption(classFilter, value, value));
+
+      const costs = [...new Set(allCards.map(c => Number(c.cost)).filter(Number.isFinite))].sort((a, b) => a - b);
+      costFilter.innerHTML = '<option value="">全コスト</option>';
+      costs.forEach(value => addOption(costFilter, String(value), `${value}PP`));
+
+      const types = [...new Set(allCards.map(c => c.type).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ja'));
+      typeFilter.innerHTML = '<option value="">全タイプ</option>';
+      types.forEach(value => addOption(typeFilter, value, value));
+    }
+
+    function addOption(select, value, label) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.appendChild(option);
+    }
+
+    function totalSelected() {
+      return Object.values(selectedCardsMap).reduce((sum, count) => sum + count, 0);
+    }
+
+    function changeCardCount(cardId, delta) {
+      const current = selectedCardsMap[cardId] || 0;
+      const next = current + delta;
+      if (next < 0) return;
+      if (next > 3) {
+        alert('同じカードは3枚までです。');
+        return;
+      }
+      if (delta > 0 && totalSelected() >= 40) {
+        alert('デッキは40枚までです。');
+        return;
+      }
+
+      if (next === 0) delete selectedCardsMap[cardId];
+      else selectedCardsMap[cardId] = next;
+
+      renderSelectedCards();
+      renderCards();
+    }
+
+    function renderSelectedCards() {
+      const total = totalSelected();
+      builderStatus.textContent = `${total} / 40枚`;
+      builderStatus.classList.toggle('full', total === 40);
+      selectedCards.innerHTML = '';
+
+      Object.entries(selectedCardsMap).forEach(([cardId, count]) => {
+        const card = allCards.find(c => c.id === cardId);
+        if (!card) return;
+        const chip = document.createElement('div');
+        chip.className = 'deck-selected-chip';
+        const label = document.createElement('span');
+        label.textContent = `${card.name} ×${count}`;
+        const minus = document.createElement('button');
+        minus.type = 'button';
+        minus.textContent = '−';
+        minus.addEventListener('click', () => changeCardCount(cardId, -1));
+        chip.append(label, minus);
+        selectedCards.appendChild(chip);
+      });
+    }
+
+    function renderCards() {
+      if (!cardsLoaded) return;
+
+      const keyword = cardSearch.value.trim().toLowerCase();
+      let cards = allCards.filter(card => {
+        const searchable = `${card.name || ''} ${card.effect || ''}`.toLowerCase();
+        if (keyword && !searchable.includes(keyword)) return false;
+        if (packFilter.value && card.pack !== packFilter.value) return false;
+        if (classFilter.value && card.class !== classFilter.value) return false;
+        if (costFilter.value && String(card.cost) !== costFilter.value) return false;
+        if (typeFilter.value && card.type !== typeFilter.value) return false;
+        if (selectedClass && card.class !== selectedClass && card.class !== 'ニュートラル') return false;
+        return true;
+      });
+
+      cards.sort((a, b) => Number(a.cost) - Number(b.cost) || String(a.name).localeCompare(String(b.name), 'ja'));
+      cardGrid.innerHTML = '';
+
+      cards.forEach(card => {
+        const count = selectedCardsMap[card.id] || 0;
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `card-picker${count ? ' selected' : ''}${count >= 3 ? ' maxed' : ''}`;
+
+        const img = document.createElement('img');
+        img.src = CardDeckAPI.cardImage(card);
+        img.alt = card.name || '';
+        img.loading = 'lazy';
+        img.addEventListener('error', () => {
+          img.style.display = 'none';
+        });
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'cp-count';
+        countBadge.textContent = count;
+
+        const name = document.createElement('div');
+        name.className = 'cp-name';
+        name.textContent = `${card.cost}PP ${card.name}`;
+
+        button.append(img, countBadge, name);
+        button.addEventListener('click', () => changeCardCount(card.id, 1));
+        button.addEventListener('contextmenu', event => {
+          event.preventDefault();
+          changeCardCount(card.id, -1);
+        });
+        cardGrid.appendChild(button);
+      });
+    }
+
+    function registerDeck() {
+      const name = deckNameInput.value.trim();
+      const url = deckUrlInput.value.trim();
+      const memo = deckMemoInput.value.trim();
+
+      if (!selectedClass || !name) {
+        alert('クラスとデッキ名は必須です');
+        return;
+      }
+
+      if (registrationMode === 'builder' && totalSelected() !== 40) {
+        alert('カードを合計40枚選択してください');
+        return;
+      }
+
+      const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
+      if (!data.decks) data.decks = [];
+
+      const id = 'deck-' + Date.now();
+      const deck = {
+        id,
+        environmentId: currentEnvironmentId,
+        class: selectedClass,
+        name,
+        url: registrationMode === 'url' ? url : '',
+        memo,
+        records: [],
+        deckType: registrationMode === 'builder' ? 'builder' : 'image',
+        cards: registrationMode === 'builder'
+          ? Object.entries(selectedCardsMap).map(([cardId, count]) => ({ cardId, count }))
+          : []
+      };
+
+      data.decks.push(deck);
+      data.selectedDeckId = id;
+      localStorage.setItem('shadowverseData', JSON.stringify(data));
+      location.href = 'deck_select.html';
+    }
+
+    function goToSelect() {
+      location.href = 'deck_select.html';
+    }
+  </script>
+</body>
+</html>

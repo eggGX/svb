@@ -200,13 +200,32 @@ img.icon {
 
         container.appendChild(div);
       });
-      CardDeckAPI.loadCards().then(({cards}) => {
-        const byId = Object.fromEntries(cards.map(c => [c.id,c]));
-        decks.forEach(deck => {
-          const el = document.querySelector(`.deck-preview-target[data-deck-id="${deck.id}"]`);
-          if (el && !CardDeckAPI.renderDeckPreview(deck, el, byId, true)) el.style.display='none';
+      // 既存のURL登録デッキはカードDBの読み込み成否に関係なく即表示する
+      decks.forEach(deck => {
+        const el = document.querySelector(`.deck-preview-target[data-deck-id="${deck.id}"]`);
+        if (!el) return;
+        if (deck.deckType !== 'builder') {
+          if (!CardDeckAPI.renderDeckPreview(deck, el, {}, true)) el.style.display = 'none';
+        }
+      });
+
+      // デッキ作成で登録したデッキだけカードDBを読み込んで描画する
+      const builderDecks = decks.filter(deck => deck.deckType === 'builder');
+      if (builderDecks.length) {
+        CardDeckAPI.loadCards().then(({cards}) => {
+          const byId = Object.fromEntries(cards.map(c => [c.id, c]));
+          builderDecks.forEach(deck => {
+            const el = document.querySelector(`.deck-preview-target[data-deck-id="${deck.id}"]`);
+            if (el && !CardDeckAPI.renderDeckPreview(deck, el, byId, true)) el.style.display = 'none';
+          });
+        }).catch(error => {
+          console.warn('カードDBの読み込みに失敗しました', error);
+          builderDecks.forEach(deck => {
+            const el = document.querySelector(`.deck-preview-target[data-deck-id="${deck.id}"]`);
+            if (el) el.style.display = 'none';
+          });
         });
-      }).catch(console.warn);
+      }
     }
 
     function selectDeck(id) {

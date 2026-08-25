@@ -1,0 +1,14 @@
+[
+  {
+    "id": "pack001_sample_001",
+    "name": "サンプルカード・ニュートラル",
+    "class": "ニュートラル",
+    "pack": "pack_001",
+    "cost": 7,
+    "rarity": "レジェンド",
+    "type": "フォロワー",
+    "trait": "",
+    "effect": "これは表示確認用のサンプルカードです。画像がない場合はNO IMAGE表示になります。",
+    "image": "images/pack001_sample_001.png"
+  }
+]

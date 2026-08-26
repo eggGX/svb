@@ -25,14 +25,14 @@
         if(!card) return;
         const item=document.createElement('div'); item.className='built-deck-card';
         item.title=`${card.name} ×${x.count}`;
-        item.innerHTML=`<img src="${API.cardImage(card)}" alt="${card.name||''}"><span>${x.count}</span>`;
+        item.innerHTML=`<img loading="lazy" src="${API.cardImage(card)}" alt="${card.name||''}"><span>${x.count}</span>`;
         const previewImg=item.querySelector('img');
         if(previewImg) previewImg.addEventListener('error',()=>{ previewImg.style.display='none'; });
         box.appendChild(item);
       });
       target.appendChild(box); return true;
     }
-    if(deck && deck.url){ const img=document.createElement('img'); img.src=deck.url; img.alt=deck.name||'デッキ画像'; target.appendChild(img); return true; }
+    if(deck && deck.url){ const img=document.createElement('img'); img.loading='lazy'; img.src=deck.url; img.alt=deck.name||'デッキ画像'; target.appendChild(img); return true; }
     return false;
   };
 

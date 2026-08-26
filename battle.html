@@ -1,477 +1,77 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>戦績入力</title>
-  <link rel="stylesheet" href="style/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    #resultArea {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 40px;
-      margin-top: 30px;
-    }
-
-    #summary,
-    #chartContainer {
-      flex: 1;
-      min-width: 300px;
-    }
-
-    #opponentPieChart {
-      max-width: 100%;
-      height: auto;
-    }
-
-    .class-button-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      width: 1000px;
-    }
-
-    .class-button {
-      border: 2px solid transparent;
-      border-radius: 8px;
-      padding: 4px;
-      background-color: transparent;
-      cursor: pointer;
-      transition: border 0.3s;
-    }
-
-    .class-button img {
-      width: 60px;
-      height: 60px;
-      object-fit: contain;
-    }
-
-    .class-button.selected {
-      border: 2px solid #4caf50;
-      background-color: #eaffea;
-    }
-
-    .select-button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      background-color: #3399ff;
-      cursor: pointer;
-    }
-
-    .select-button.selected {
-      background-color: #2ed682;
-      border-color: #2ed682;
-      color: #2ed682;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>戦績入力</title>
+<link rel="stylesheet" href="style/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-
-/* =========================================================
-   Ver2.6 fix: class icon layout normalization
-   - all class buttons are centered
-   - SVGs never overflow their frames
-   - button groups wrap inside panels instead of spilling out
-========================================================= */
-.class-button-group,
-#classButtons,
-#class-buttons,
-.class-buttons {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-wrap: wrap !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 14px !important;
-  margin: 10px 0 22px !important;
-  overflow: visible !important;
-}
-
-.class-button,
-#classButtons button,
-#class-buttons button,
-.class-buttons button {
-  width: 88px !important;
-  height: 74px !important;
-  min-width: 88px !important;
-  min-height: 74px !important;
-  max-width: 88px !important;
-  max-height: 74px !important;
-  box-sizing: border-box !important;
-  padding: 8px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  vertical-align: middle !important;
-  overflow: hidden !important;
-  border-radius: 18px !important;
-  line-height: 1 !important;
-}
-
-.class-button img,
-.class-button svg,
-#classButtons button img,
-#classButtons button svg,
-#class-buttons button img,
-#class-buttons button svg,
-.class-buttons button img,
-.class-buttons button svg,
-#classButtons .class-icon,
-#class-buttons .class-icon,
-.class-buttons .class-icon {
-  width: 58px !important;
-  height: 58px !important;
-  max-width: 58px !important;
-  max-height: 58px !important;
-  display: block !important;
-  margin: auto !important;
-  object-fit: contain !important;
-  flex: 0 0 auto !important;
-  position: static !important;
-  transform: none !important;
-}
-
-/* small icons used in list/table headers */
-.class-chip,
-.icon,
-.deck-title img.icon,
-img.icon {
-  display: inline-block !important;
-  object-fit: contain !important;
-  vertical-align: middle !important;
-  flex: 0 0 auto !important;
-}
-
-/* prevent top-level panels from clipping contents unexpectedly */
-#inputArea,
-#summary,
-#totalStats,
-#recentStats,
-#chartContainer,
-.section,
-.field,
-.deck,
-.bo1-card {
-  box-sizing: border-box !important;
-  max-width: 100% !important;
-}
-
-@media (max-width: 560px) {
-  .class-button,
-  #classButtons button,
-  #class-buttons button,
-  .class-buttons button {
-    width: 72px !important;
-    height: 64px !important;
-    min-width: 72px !important;
-    min-height: 64px !important;
-    max-width: 72px !important;
-    max-height: 64px !important;
-    padding: 7px !important;
-  }
-  .class-button img,
-  .class-button svg,
-  #classButtons button img,
-  #classButtons button svg,
-  #class-buttons button img,
-  #class-buttons button svg,
-  .class-buttons button img,
-  .class-buttons button svg,
-  #classButtons .class-icon,
-  #class-buttons .class-icon,
-  .class-buttons .class-icon {
-    width: 46px !important;
-    height: 46px !important;
-    max-width: 46px !important;
-    max-height: 46px !important;
-  }
-}
+#resultArea{display:grid!important;grid-template-columns:1fr!important;gap:28px!important;margin-top:30px!important;width:100%!important;max-width:100%!important}
+#summary,#chartContainer{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important}
+#summary{overflow-x:auto!important}
+#summary table{width:100%!important;table-layout:fixed!important;margin:0!important}
+#summary th,#summary td{white-space:normal!important;word-break:keep-all!important}
+#chartContainer{display:flex!important;flex-direction:column!important;align-items:center!important}
+#chartContainer h2{align-self:stretch!important}
+#opponentPieChart{width:min(100%,560px)!important;height:auto!important;max-width:560px!important;max-height:560px!important}
+.class-button-group{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 22px;width:100%!important;max-width:100%!important}
+.class-button{width:88px!important;height:74px!important;min-width:88px!important;max-width:88px!important;padding:8px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;border:2px solid transparent;border-radius:18px!important;background-color:transparent;cursor:pointer}
+.class-button img{width:58px!important;height:58px!important;max-width:58px!important;max-height:58px!important;object-fit:contain!important;display:block!important;margin:auto!important}
+.class-button.selected{border:2px solid #4caf50;background-color:#eaffea}
+.select-button{padding:10px 20px;margin:5px;border:2px solid #ccc;border-radius:8px;background-color:#3399ff;cursor:pointer}
+.select-button.selected{background-color:#2ed682;border-color:#2ed682;color:#2ed682}
+#inputArea,#summary,#recentStats,#chartContainer{box-sizing:border-box!important;max-width:100%!important}
+@media(max-width:800px){#resultArea{gap:20px!important}#opponentPieChart{max-width:440px!important}}
+@media(max-width:560px){.class-button{width:72px!important;height:64px!important;min-width:72px!important;max-width:72px!important}.class-button img{width:46px!important;height:46px!important;max-width:46px!important;max-height:46px!important}#summary{overflow-x:auto!important}#summary table{min-width:520px!important;table-layout:auto!important}}
 </style>
 </head>
-
 <body>
-  <div id="inputArea">
-    <h1>戦績入力</h1>
-
-    <button onclick="goToResult()">結果を表示</button>
-    <div id="bottomButtons">
-      <button onclick="goToDeckSelect()">デッキ選択へ</button>
-    </div>
-
-    <div>
-      <h3>相手のクラス</h3>
-      <div id="opponentButtons" class="class-button-group">
-        <button class="class-button" data-class="エルフ"><img src="images/elf.svg" alt="エルフ"></button>
-        <button class="class-button" data-class="ロイヤル"><img src="images/royal.svg" alt="ロイヤル"></button>
-        <button class="class-button" data-class="ウィッチ"><img src="images/witch.svg" alt="ウィッチ"></button>
-        <button class="class-button" data-class="ドラゴン"><img src="images/dragon.svg" alt="ドラゴン"></button>
-        <button class="class-button" data-class="ナイトメア"><img src="images/nightmare.svg" alt="ナイトメア"></button>
-        <button class="class-button" data-class="ビショップ"><img src="images/bishop.svg" alt="ビショップ"></button>
-        <button class="class-button" data-class="ネメシス"><img src="images/nemesis.svg" alt="ネメシス"></button>
-      </div>
-
-      <h3>先攻 / 後攻</h3>
-      <div id="firstButtons">
-        <button class="select-button" data-value="true">先攻</button>
-        <button class="select-button" data-value="false">後攻</button>
-        <button class="select-button" data-value="">選択しない</button>
-      </div>
-
-      <h3>勝敗</h3>
-      <div id="winButtons">
-        <button class="select-button" data-value="true">勝ち</button>
-        <button class="select-button" data-value="false">負け</button>
-      </div>
-
-      <br><br>
-      <button onclick="registerResult()">登録</button>
-    </div>
-
-    <h2>今日・直近の統計</h2>
-    <div id="recentStats"></div>
-
-    <!-- 勝率と円グラフ -->
-    <div id="resultArea">
-      <div id="summary">
-        <h2>勝率一覧</h2>
-      </div>
-      <div id="chartContainer">
-        <h2>クラス別対戦数</h2>
-        <canvas id="opponentPieChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <!-- 右上に画像表示 -->
-  <div id="deckImageContainer"></div>
-
-  <script src="js/card_deck.js"></script>
-  <script>
-    const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-    const currentEnvironmentId = data.currentEnvironmentId;
-    const selectedDeckId = data.selectedDeckId;
-    let selectedDeck = null;
-    let selectedOpponentClass = '';
-    let selectedFirst = null;
-    let selectedWin = null;
-
-    if (data.decks && selectedDeckId) {
-      selectedDeck = data.decks.find(d => d.id === selectedDeckId && d.environmentId === currentEnvironmentId);
-    }
-
-    if (!selectedDeck) {
-      alert('選択されたデッキが見つかりません。デッキ選択画面に戻ります。');
-      location.href = 'deck_select.html';
-    }
-
-    async function updateDeckImage() {
-      const container = document.getElementById('deckImageContainer');
-      container.innerHTML = '';
-      if (!selectedDeck) { container.style.display='none'; return; }
-      try {
-        let byId = {};
-        if (selectedDeck.deckType === 'builder') {
-          const loaded = await CardDeckAPI.loadCards();
-          byId = Object.fromEntries(loaded.cards.map(c => [c.id,c]));
-        }
-        const shown = CardDeckAPI.renderDeckPreview(selectedDeck, container, byId, true);
-        container.style.display = shown ? 'block' : 'none';
-      } catch(e) {
-        if (selectedDeck.url) { CardDeckAPI.renderDeckPreview(selectedDeck, container, {}, true); container.style.display='block'; }
-        else container.style.display='none';
-      }
-    }
-
-    updateDeckImage();
-
-    document.querySelectorAll('.class-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.class-button').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedOpponentClass = btn.dataset.class;
-      });
-    });
-
-    document.querySelectorAll('#firstButtons .select-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#firstButtons .select-button').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedFirst = btn.dataset.value === '' ? null : btn.dataset.value === 'true';
-      });
-    });
-
-    document.querySelectorAll('#winButtons .select-button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#winButtons .select-button').forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        selectedWin = btn.dataset.value === 'true';
-      });
-    });
-
-    function goToResult() {
-      location.href = 'result.html';
-    }
-
-    function goToDeckSelect() {
-      location.href = 'deck_select.html';
-    }
-
-    function registerResult() {
-      const opponent = selectedOpponentClass;
-
-      if (!opponent || selectedWin === null) {
-        alert('すべての項目を選択してください');
-        return;
-      }
-
-      selectedDeck.records = selectedDeck.records || [];
-      selectedDeck.records.push({
-        opponent,
-        first: selectedFirst,
-        win: selectedWin,
-        createdAt: new Date().toISOString()
-      });
-
-      const allData = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      allData.decks = (allData.decks || []).filter(d => d.id !== selectedDeckId);
-      selectedDeck.environmentId = currentEnvironmentId;
-      allData.decks.push(selectedDeck);
-      allData.currentEnvironmentId = currentEnvironmentId;
-      allData.selectedDeckId = selectedDeckId;
-      localStorage.setItem('shadowverseData', JSON.stringify(allData));
-
-      alert('登録しました');
-      updateSummary();
-      updateChart();
-      updateRecentStats();
-    }
-
-    const opponentClasses = ["エルフ", "ロイヤル", "ウィッチ", "ドラゴン", "ナイトメア", "ビショップ", "ネメシス"];
-    const ctx = document.getElementById("opponentPieChart").getContext("2d");
-    let pieChart;
-
-    function updateChart() {
-      const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      const deck = data.decks?.find(d => d.id === data.selectedDeckId && d.environmentId === data.currentEnvironmentId);
-      const counts = {};
-      opponentClasses.forEach(cls => counts[cls] = 0);
-
-      (deck?.records || []).forEach(r => {
-        if (counts[r.opponent] !== undefined) counts[r.opponent]++;
-      });
-
-      const values = opponentClasses.map(cls => counts[cls]);
-
-      if (pieChart) {
-        pieChart.data.datasets[0].data = values;
-        pieChart.update();
-      } else {
-        pieChart = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: opponentClasses,
-            datasets: [{
-              data: values,
-              backgroundColor: [
-                "#66cc66", "#f0e68c", "#6699cc", "#ffa500", "#ff6666", "#cccccc", "#66ffff"
-              ]
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'right'
-              }
-            }
-          }
-        });
-      }
-    }
-
-
-    function formatRate(winCount, total) {
-      return total ? ((winCount / total) * 100).toFixed(1) + '%' : '-';
-    }
-
-    function isTodayRecord(record) {
-      if (!record.createdAt) return false;
-      const recordDate = new Date(record.createdAt);
-      if (Number.isNaN(recordDate.getTime())) return false;
-      const today = new Date();
-      return recordDate.getFullYear() === today.getFullYear()
-        && recordDate.getMonth() === today.getMonth()
-        && recordDate.getDate() === today.getDate();
-    }
-
-    function createStatsHtml(title, records) {
-      const total = records.length;
-      const win = records.filter(r => r.win).length;
-      return `
-        <div class="stat-card">
-          <h3>${title}</h3>
-          <p>対戦数: ${total}</p>
-          <p>勝利数: ${win}</p>
-          <p>勝率: ${formatRate(win, total)}</p>
-        </div>
-      `;
-    }
-
-    function updateRecentStats() {
-      const data = JSON.parse(localStorage.getItem('shadowverseData') || '{}');
-      const deck = data.decks?.find(d => d.id === data.selectedDeckId && d.environmentId === data.currentEnvironmentId);
-      const records = deck?.records || [];
-      const todayRecords = records.filter(isTodayRecord);
-      const recent10Records = records.slice(-10).reverse();
-
-      document.getElementById('recentStats').innerHTML = `
-        <div class="stat-card-area">
-          ${createStatsHtml('今日', todayRecords)}
-          ${createStatsHtml('直近10戦', recent10Records)}
-        </div>
-      `;
-    }
-
-    function updateSummary() {
-      if (!selectedDeck || !selectedDeck.records) return;
-      const summary = {};
-      opponentClasses.forEach(c => summary[c] = { total: 0, win: 0 });
-
-      for (const r of selectedDeck.records) {
-        if (summary[r.opponent]) {
-          summary[r.opponent].total++;
-          if (r.win) summary[r.opponent].win++;
-        }
-      }
-
-      const table = document.createElement('table');
-      const header = document.createElement('tr');
-      header.innerHTML = '<th>相手クラス</th><th>対戦数</th><th>勝利数</th><th>勝率</th>';
-      table.appendChild(header);
-
-      for (const cls in summary) {
-        const { total, win } = summary[cls];
-        const winRate = total ? ((win / total * 100).toFixed(1) + '%') : '-';
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${cls}</td><td>${total}</td><td>${win}</td><td>${winRate}</td>`;
-        table.appendChild(row);
-      }
-
-      const container = document.getElementById('summary');
-      container.innerHTML = '';
-      container.appendChild(table);
-    }
-
-    updateSummary();
-    updateChart();
-    updateRecentStats();
-  </script>
-</body>
-
-</html>
+<div id="inputArea">
+<h1>戦績入力</h1>
+<button onclick="goToResult()">結果を表示</button>
+<div id="bottomButtons"><button onclick="goToDeckSelect()">デッキ選択へ</button></div>
+<div>
+<h3>相手のクラス</h3>
+<div id="opponentButtons" class="class-button-group">
+<button class="class-button" data-class="エルフ"><img src="images/elf.svg" alt="エルフ"></button>
+<button class="class-button" data-class="ロイヤル"><img src="images/royal.svg" alt="ロイヤル"></button>
+<button class="class-button" data-class="ウィッチ"><img src="images/witch.svg" alt="ウィッチ"></button>
+<button class="class-button" data-class="ドラゴン"><img src="images/dragon.svg" alt="ドラゴン"></button>
+<button class="class-button" data-class="ナイトメア"><img src="images/nightmare.svg" alt="ナイトメア"></button>
+<button class="class-button" data-class="ビショップ"><img src="images/bishop.svg" alt="ビショップ"></button>
+<button class="class-button" data-class="ネメシス"><img src="images/nemesis.svg" alt="ネメシス"></button>
+</div>
+<h3>先攻 / 後攻</h3>
+<div id="firstButtons"><button class="select-button" data-value="true">先攻</button><button class="select-button" data-value="false">後攻</button><button class="select-button" data-value="">選択しない</button></div>
+<h3>勝敗</h3>
+<div id="winButtons"><button class="select-button" data-value="true">勝ち</button><button class="select-button" data-value="false">負け</button></div>
+<br><br><button onclick="registerResult()">登録</button>
+</div>
+<h2>今日・直近の統計</h2><div id="recentStats"></div>
+<div id="resultArea"><div id="summary"><h2>勝率一覧</h2></div><div id="chartContainer"><h2>クラス別対戦数</h2><canvas id="opponentPieChart"></canvas></div></div>
+</div>
+<div id="deckImageContainer"></div>
+<script src="js/card_deck.js"></script>
+<script>
+const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
+const currentEnvironmentId=data.currentEnvironmentId;const selectedDeckId=data.selectedDeckId;let selectedDeck=null;let selectedOpponentClass='';let selectedFirst=null;let selectedWin=null;
+if(data.decks&&selectedDeckId){selectedDeck=data.decks.find(d=>d.id===selectedDeckId&&d.environmentId===currentEnvironmentId)}
+if(!selectedDeck){alert('選択されたデッキが見つかりません。デッキ選択画面に戻ります。');location.href='deck_select.html'}
+async function updateDeckImage(){const container=document.getElementById('deckImageContainer');container.innerHTML='';if(!selectedDeck){container.style.display='none';return}try{let byId={};if(selectedDeck.deckType==='builder'){const loaded=await CardDeckAPI.loadCards();byId=Object.fromEntries(loaded.cards.map(c=>[c.id,c]))}const shown=CardDeckAPI.renderDeckPreview(selectedDeck,container,byId,true);container.style.display=shown?'block':'none'}catch(e){if(selectedDeck.url){CardDeckAPI.renderDeckPreview(selectedDeck,container,{},true);container.style.display='block'}else container.style.display='none'}}
+updateDeckImage();
+document.querySelectorAll('.class-button').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.class-button').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedOpponentClass=btn.dataset.class})});
+document.querySelectorAll('#firstButtons .select-button').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#firstButtons .select-button').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedFirst=btn.dataset.value===''?null:btn.dataset.value==='true'})});
+document.querySelectorAll('#winButtons .select-button').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('#winButtons .select-button').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');selectedWin=btn.dataset.value==='true'})});
+function goToResult(){location.href='result.html'}function goToDeckSelect(){location.href='deck_select.html'}
+function registerResult(){const opponent=selectedOpponentClass;if(!opponent||selectedWin===null){alert('すべての項目を選択してください');return}selectedDeck.records=selectedDeck.records||[];selectedDeck.records.push({opponent,first:selectedFirst,win:selectedWin,createdAt:new Date().toISOString()});const allData=JSON.parse(localStorage.getItem('shadowverseData')||'{}');allData.decks=(allData.decks||[]).filter(d=>d.id!==selectedDeckId);selectedDeck.environmentId=currentEnvironmentId;allData.decks.push(selectedDeck);allData.currentEnvironmentId=currentEnvironmentId;allData.selectedDeckId=selectedDeckId;localStorage.setItem('shadowverseData',JSON.stringify(allData));alert('登録しました');updateSummary();updateChart();updateRecentStats()}
+const opponentClasses=["エルフ","ロイヤル","ウィッチ","ドラゴン","ナイトメア","ビショップ","ネメシス"];const ctx=document.getElementById('opponentPieChart').getContext('2d');let pieChart;
+function updateChart(){const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');const deck=data.decks?.find(d=>d.id===data.selectedDeckId&&d.environmentId===data.currentEnvironmentId);const counts={};opponentClasses.forEach(cls=>counts[cls]=0);(deck?.records||[]).forEach(r=>{if(counts[r.opponent]!==undefined)counts[r.opponent]++});const values=opponentClasses.map(cls=>counts[cls]);if(pieChart){pieChart.data.datasets[0].data=values;pieChart.update()}else{pieChart=new Chart(ctx,{type:'pie',data:{labels:opponentClasses,datasets:[{data:values,backgroundColor:["#66cc66","#f0e68c","#6699cc","#ffa500","#ff6666","#cccccc","#66ffff"]}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right'}}}})}}
+function formatRate(winCount,total){return total?((winCount/total)*100).toFixed(1)+'%':'-'}
+function isTodayRecord(record){if(!record.createdAt)return false;const recordDate=new Date(record.createdAt);if(Number.isNaN(recordDate.getTime()))return false;const today=new Date();return recordDate.getFullYear()===today.getFullYear()&&recordDate.getMonth()===today.getMonth()&&recordDate.getDate()===today.getDate()}
+function createStatsHtml(title,records){const total=records.length;const win=records.filter(r=>r.win).length;return `<div class="stat-card"><h3>${title}</h3><p>対戦数: ${total}</p><p>勝利数: ${win}</p><p>勝率: ${formatRate(win,total)}</p></div>`}
+function updateRecentStats(){const data=JSON.parse(localStorage.getItem('shadowverseData')||'{}');const deck=data.decks?.find(d=>d.id===data.selectedDeckId&&d.environmentId===data.currentEnvironmentId);const records=deck?.records||[];const todayRecords=records.filter(isTodayRecord);const recent10Records=records.slice(-10).reverse();document.getElementById('recentStats').innerHTML=`<div class="stat-card-area">${createStatsHtml('今日',todayRecords)}${createStatsHtml('直近10戦',recent10Records)}</div>`}
+function updateSummary(){if(!selectedDeck||!selectedDeck.records)return;const summary={};opponentClasses.forEach(c=>summary[c]={total:0,win:0});for(const r of selectedDeck.records){if(summary[r.opponent]){summary[r.opponent].total++;if(r.win)summary[r.opponent].win++}}const table=document.createElement('table');const header=document.createElement('tr');header.innerHTML='<th>相手クラス</th><th>対戦数</th><th>勝利数</th><th>勝率</th>';table.appendChild(header);for(const cls in summary){const{total,win}=summary[cls];const winRate=total?((win/total*100).toFixed(1)+'%'):'-';const row=document.createElement('tr');row.innerHTML=`<td>${cls}</td><td>${total}</td><td>${win}</td><td>${winRate}</td>`;table.appendChild(row)}const container=document.getElementById('summary');container.innerHTML='';container.appendChild(table)}
+updateSummary();updateChart();updateRecentStats();
+</script>
+</body></html>

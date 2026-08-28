@@ -3,16 +3,23 @@
   API.cardImage = card => `cardData/${card.pack}/${card.image}`;
   API.loadCards = async function(){
     const packs = await fetch('cardData/packs.json').then(r=>{if(!r.ok) throw new Error('packs.json'); return r.json();});
-    const all=[]; const packNames={};
-    for(const id of packs){
+    const packResults = await Promise.all(packs.map(async id => {
       try{
         const [meta,cards]=await Promise.all([
           fetch(`cardData/${id}/pack.json`).then(r=>r.ok?r.json():({id,name:id})),
           fetch(`cardData/${id}/cards.json`).then(r=>r.ok?r.json():[])
         ]);
-        packNames[id]=meta.name||id;
-        for(const c of cards) all.push({...c,pack:id,packName:packNames[id]});
-      }catch(e){ console.warn('card pack load failed',id,e); }
+        const packName=meta.name||id;
+        return {id,packName,cards:cards.map(c=>({...c,pack:id,packName}))};
+      }catch(e){
+        console.warn('card pack load failed',id,e);
+        return {id,packName:id,cards:[]};
+      }
+    }));
+    const all=[]; const packNames={};
+    for(const result of packResults){
+      packNames[result.id]=result.packName;
+      all.push(...result.cards);
     }
     return {cards:all, packNames};
   };

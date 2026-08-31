@@ -1,16 +1,18 @@
 (function(){
   const API = {};
-  API.cardImage = card => `cardData/${card.pack}/${card.image}`;
+  API.cardOriginalImage = card => `cardData/${card.pack}/${card.image}`;
   API.cardThumbnail = card => {
     const image=String(card.image||'');
     const file=image.split('/').pop().replace(/\.[^.]+$/,'.webp');
     return `cardData/${card.pack}/thumbnails/${file}`;
   };
+  // 既存画面は cardImage() を使っているため、一覧・分析画面をまとめて軽量版へ切り替える。
+  API.cardImage = card => API.cardThumbnail(card);
   API.useThumbnail = function(img, card){
     img.src=API.cardThumbnail(card);
     img.addEventListener('error',function fallback(){
       img.removeEventListener('error',fallback);
-      img.src=API.cardImage(card);
+      img.src=API.cardOriginalImage(card);
     },{once:true});
   };
   API.loadCards = async function(){

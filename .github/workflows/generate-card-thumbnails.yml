@@ -1,0 +1,37 @@
+name: Generate card thumbnails
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cardData/**/images/**'
+      - 'scripts/generate_thumbnails.py'
+      - '.github/workflows/generate-card-thumbnails.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install Pillow
+        run: python -m pip install --upgrade pillow
+      - name: Generate thumbnails
+        run: python scripts/generate_thumbnails.py
+      - name: Commit thumbnails
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cardData/*/thumbnails
+          if git diff --cached --quiet; then
+            echo "No thumbnail changes"
+          else
+            git commit -m "カード画像サムネイルを自動生成"
+            git push
+          fi

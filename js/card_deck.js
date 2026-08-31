@@ -6,7 +6,7 @@
     const file=image.split('/').pop().replace(/\.[^.]+$/,'.webp');
     return `cardData/${card.pack}/thumbnails/${file}`;
   };
-  API.cardImage = card => API.cardOriginalImage(card);
+  API.cardImage = card => API.cardThumbnail(card);
   API.useThumbnail = function(img, card){
     img.src=API.cardThumbnail(card);
     img.addEventListener('error',function fallback(){

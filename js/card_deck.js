@@ -1,6 +1,18 @@
 (function(){
   const API = {};
   API.cardImage = card => `cardData/${card.pack}/${card.image}`;
+  API.cardThumbnail = card => {
+    const image=String(card.image||'');
+    const file=image.split('/').pop().replace(/\.[^.]+$/,'.webp');
+    return `cardData/${card.pack}/thumbnails/${file}`;
+  };
+  API.useThumbnail = function(img, card){
+    img.src=API.cardThumbnail(card);
+    img.addEventListener('error',function fallback(){
+      img.removeEventListener('error',fallback);
+      img.src=API.cardImage(card);
+    },{once:true});
+  };
   API.loadCards = async function(){
     const packs = await fetch('cardData/packs.json').then(r=>{if(!r.ok) throw new Error('packs.json'); return r.json();});
     const packResults = await Promise.all(packs.map(async id => {
@@ -32,9 +44,11 @@
         if(!card) return;
         const item=document.createElement('div'); item.className='built-deck-card';
         item.title=`${card.name} ×${x.count}`;
-        item.innerHTML=`<img loading="lazy" src="${API.cardImage(card)}" alt="${card.name||''}"><span>${x.count}</span>`;
-        const previewImg=item.querySelector('img');
-        if(previewImg) previewImg.addEventListener('error',()=>{ previewImg.style.display='none'; });
+        const previewImg=document.createElement('img');
+        previewImg.loading='lazy'; previewImg.decoding='async'; previewImg.alt=card.name||'';
+        API.useThumbnail(previewImg,card);
+        const count=document.createElement('span'); count.textContent=x.count;
+        item.append(previewImg,count);
         box.appendChild(item);
       });
       target.appendChild(box); return true;
@@ -56,7 +70,6 @@
     document.head.appendChild(style);
   }
 
-  // 戦績入力画面：デッキ作成方式のデッキだけマリガン研究を利用可能にする。
   if (location.pathname.endsWith('/battle.html') || location.pathname.endsWith('battle.html')) {
     window.addEventListener('DOMContentLoaded',()=>{
       const d=JSON.parse(localStorage.getItem('shadowverseData')||'{}');
